@@ -15,7 +15,10 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          dir: 'src/services'
+          include: [
+            'src/services/**/*.spec.ts',
+            'src/drivers/**/*.spec.ts'
+          ]
         }
       },
       {
