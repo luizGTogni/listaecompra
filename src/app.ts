@@ -14,6 +14,7 @@ import { ZodError } from 'zod'
 import { API_URL_V1_BASE, env } from './config/env.js'
 import { logger } from './config/logger.js'
 import { appRoutes } from './http/routes/index.js'
+import { HttpError } from './http/types/errors/http-error.js'
 
 export const app = Fastify({
   logger: env.NODE_ENV === 'dev' ? true : false
@@ -55,6 +56,15 @@ app.register(swagger, {
       title: 'Lista&Compra',
       description: 'API Documentation',
       version: '1.0.0'
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
     }
   },
   transform: jsonSchemaTransform
@@ -68,7 +78,7 @@ app.register(appRoutes, {
   prefix: API_URL_V1_BASE
 })
 
-app.setErrorHandler((error: Error | ZodError, request, reply) => {
+app.setErrorHandler((error: Error | ZodError | HttpError, request, reply) => {
   request.log.error(error)
 
   if (error instanceof ZodError) {
@@ -76,6 +86,13 @@ app.setErrorHandler((error: Error | ZodError, request, reply) => {
       name: error.name,
       message: error.message,
       issues: error.issues
+    })
+  }
+
+  if (error instanceof HttpError) {
+    return reply.status(error.statusCode).send({
+      name: error.name,
+      message: error.message
     })
   }
 
