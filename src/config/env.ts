@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import z from 'zod'
 
 const envSchema = z.object({
@@ -5,7 +6,8 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(['warn', 'error', 'fatal', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
-  PORT: z.coerce.number().default(3000)
+  PORT: z.coerce.number().default(3000),
+  JWT_SECRET: z.string()
 })
 
 const _env = envSchema.safeParse(process.env)
