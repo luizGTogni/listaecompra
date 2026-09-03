@@ -31,6 +31,11 @@ jobs:
 
       - name: Test
         run: pnpm test
+        env:
+          JWT_SECRET: test-secret-for-ci
+          NODE_ENV: test
 
       - name: Build
         run: pnpm build
+        env:
+          JWT_SECRET: test-secret-for-ci
