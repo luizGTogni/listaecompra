@@ -1,5 +1,6 @@
 import { CodeGenerateDriver } from '@/drivers/code/code-generate.driver.js'
 import { RandomCodeGenerateDriver } from '@/drivers/code/random-code-generate.driver.js'
+import { MockEmailDriver } from '@/drivers/email/mock-email.driver.js'
 import { MockPasswordHashDriver } from '@/drivers/password/mock-password-hash.driver.js'
 import { PasswordHashDriver } from '@/drivers/password/password-hash.driver.js'
 import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
@@ -7,6 +8,7 @@ import { InMemoryCodeRepository } from '@/repositories/code-in-memory.repository
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { SendEmailService } from '../email/send-email.service.js'
 import { CreateCodeService } from '../token/create-code.service.js'
 import { CreateUserService } from './create-user.service.js'
 
@@ -15,6 +17,8 @@ let passwordHasher: PasswordHashDriver
 let codeRepository: CodeRepository
 let codeGenerate: CodeGenerateDriver
 let createCodeService: CreateCodeService
+let emailDriver: MockEmailDriver
+let sendEmailService: SendEmailService
 let sut: CreateUserService
 
 describe('Create User Service', () => {
@@ -23,10 +27,13 @@ describe('Create User Service', () => {
     passwordHasher = new MockPasswordHashDriver()
     codeRepository = new InMemoryCodeRepository()
     codeGenerate = new RandomCodeGenerateDriver()
+    emailDriver = new MockEmailDriver()
+    sendEmailService = new SendEmailService(emailDriver)
     createCodeService = new CreateCodeService(
       userRepository,
       codeRepository,
-      codeGenerate
+      codeGenerate,
+      sendEmailService
     )
     sut = new CreateUserService(
       userRepository,

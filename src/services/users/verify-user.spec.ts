@@ -171,6 +171,4 @@ describe('Verify User Service', () => {
       })
     ).rejects.toBeInstanceOf(CodeExpiredError)
   })
-
-  // SERVICE EMAI (NODEMAILER)
 })

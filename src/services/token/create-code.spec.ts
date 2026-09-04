@@ -1,14 +1,18 @@
 import { CodeGenerateDriver } from '@/drivers/code/code-generate.driver.js'
 import { RandomCodeGenerateDriver } from '@/drivers/code/random-code-generate.driver.js'
+import { MockEmailDriver } from '@/drivers/email/mock-email.driver.js'
 import { InMemoryCodeRepository } from '@/repositories/code-in-memory.repository.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { SendEmailService } from '../email/send-email.service.js'
 import { CreateCodeService } from './create-code.service.js'
 
 let userRepository: UserRepository
 let codeRepository: CodeRepository
 let codeGenerate: CodeGenerateDriver
+let emailDriver: MockEmailDriver
+let sendEmailService: SendEmailService
 let sut: CreateCodeService
 
 describe('Create Code Service', () => {
@@ -16,7 +20,14 @@ describe('Create Code Service', () => {
     userRepository = new InMemoryUserRepository()
     codeRepository = new InMemoryCodeRepository()
     codeGenerate = new RandomCodeGenerateDriver()
-    sut = new CreateCodeService(userRepository, codeRepository, codeGenerate)
+    emailDriver = new MockEmailDriver()
+    sendEmailService = new SendEmailService(emailDriver)
+    sut = new CreateCodeService(
+      userRepository,
+      codeRepository,
+      codeGenerate,
+      sendEmailService
+    )
   })
 
   it('should be able to create code', async () => {
@@ -54,5 +65,24 @@ describe('Create Code Service', () => {
 
     expect(code1?.isValid).toBeFalsy()
     expect(code2?.isValid).toBeTruthy()
+  })
+
+  it('should send verification code email', async () => {
+    const user = await userRepository.create({
+      name: 'John Doe',
+      username: 'johndoe',
+      email: 'johndoe@email.com',
+      passwordHash: 'hasher-41245'
+    })
+
+    await sut.execute({ userId: user.id })
+
+    expect(emailDriver.emails).toHaveLength(1)
+    expect(emailDriver.emails[0]).toEqual({
+      from: 'from@test.com',
+      to: user.email,
+      subject: 'Lista&Compra - Verification Code',
+      body: expect.any(String)
+    })
   })
 })
