@@ -3,7 +3,7 @@
 ## Requisitos Funcionais (RF)
 
 [x] RF01 - O sistema deve permitir que o usuário crie uma conta para acessar a plataforma.
-[ ] RF02 - O sistema deve enviar um código de verificação por e-mail após o cadastro do usuário.
+[X] RF02 - O sistema deve enviar um código de verificação por e-mail após o cadastro do usuário.
 [x] RF03 - O sistema deve pedir para o usuário inserir o código de verificação recebido por e-mail.
 [x] RF04 - O sistema deve permitir o reenvio do código de verificação, caso o usuário não o receba.
 [x] RF05 - O sistema deve permitir que o usuário confirme sua conta ao inserir o código correto.
@@ -27,21 +27,20 @@
 
 [x] RN01 - O código de verificação deve expirar após um determinado período (ex: 15 minutos).
 [x] RN02 - O usuário não pode acessar funcionalidades da conta antes de verificar o e-mail.
-[ ] RN03 - Após um número máximo de tentativas incorretas (ex: 5), o código deve ser invalidado e um novo deve ser gerado.
-[x] RN04 - Um novo código gerado invalida automaticamente o código anterior.
-[ ] RN05 - O sistema deve validar se o usuário está logado antes de permitir a criação de uma lista de compras.
-[ ] RN06 - O sistema deve validar se o usuário está logado antes de permitir a adição ou remoção de produtos da lista de compras.
-[ ] RN07 - O sistema deve validar se o usuário está logado antes de permitir a finalização da compra dos produtos na lista.
-[ ] RN08 - O sistema deve validar se o usuário está logado antes de permitir o compartilhamento da lista de compras com outros usuários.
-[ ] RN09 - O sistema deve permitir que o usuário visualize apenas suas próprias listas de compras, a menos que tenha sido compartilhada com ele por outro usuário.
-[ ] RN10 - O sistema deve permitir que o usuário visualize apenas os produtos que ele adicionou à lista de compras, a menos que tenha sido compartilhada com ele por outro usuário.
-[ ] RN11 - O nome de uma lista não pode ser duplicado para o mesmo usuário.
-[ ] RN12 - Um produto não pode ser adicionado com quantidade menor ou igual a zero.
-[ ] RN13 - Apenas o dono da lista pode compartilhar, editar o nome ou excluir a lista.
-[ ] RN14 - Um usuário convidado (lista compartilhada) pode adicionar/remover produtos, mas não excluir a lista.
-[ ] RN15 - Um produto marcado como "comprado" não pode ter a quantidade editada, apenas removido.
-[x] RN16 - O sistema não deve permitir login antes da verificação de e-mail (reforça o RN02).
-[ ] RN17 - O token de recuperação de senha deve expirar após um período determinado (ex: 30 minutos).
+[x] RN03 - Um novo código gerado invalida automaticamente o código anterior.
+[ ] RN04 - O sistema deve validar se o usuário está logado antes de permitir a criação de uma lista de compras.
+[ ] RN05 - O sistema deve validar se o usuário está logado antes de permitir a adição ou remoção de produtos da lista de compras.
+[ ] RN06 - O sistema deve validar se o usuário está logado antes de permitir a finalização da compra dos produtos na lista.
+[ ] RN07 - O sistema deve validar se o usuário está logado antes de permitir o compartilhamento da lista de compras com outros usuários.
+[ ] RN08 - O sistema deve permitir que o usuário visualize apenas suas próprias listas de compras, a menos que tenha sido compartilhada com ele por outro usuário.
+[ ] RN09 - O sistema deve permitir que o usuário visualize apenas os produtos que ele adicionou à lista de compras, a menos que tenha sido compartilhada com ele por outro usuário.
+[ ] RN10 - O nome de uma lista não pode ser duplicado para o mesmo usuário.
+[ ] RN11 - Um produto não pode ser adicionado com quantidade menor ou igual a zero.
+[ ] RN12 - Apenas o dono da lista pode compartilhar, editar o nome ou excluir a lista.
+[ ] RN13 - Um usuário convidado (lista compartilhada) pode adicionar/remover produtos, mas não excluir a lista.
+[ ] RN14 - Um produto marcado como "comprado" não pode ter a quantidade editada, apenas removido.
+[x] RN15 - O sistema não deve permitir login antes da verificação de e-mail (reforça o RN02).
+[ ] RN16 - O token de recuperação de senha deve expirar após um período determinado (ex: 30 minutos).
 
 ## Requisitos Não Funcionais (RNF)
 
