@@ -33,9 +33,11 @@ jobs:
         run: pnpm test
         env:
           JWT_SECRET: test-secret-for-ci
+          RESEND_API_KEY: test-key-for-ci
           NODE_ENV: test
 
       - name: Build
         run: pnpm build
         env:
           JWT_SECRET: test-secret-for-ci
+          RESEND_API_KEY: test-key-for-ci
