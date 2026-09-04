@@ -3,6 +3,8 @@ import { CodeGenerateDriver } from '@/drivers/code/code-generate.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { SendEmailService } from '../email/send-email.service.js'
+import { verificationCodeTemplate } from '../email/templates/verification-code.template.js'
 
 interface CreateCodeRequest {
   userId: string
@@ -18,7 +20,8 @@ export class CreateCodeService {
   constructor(
     private userRepository: UserRepository,
     private codeRepository: CodeRepository,
-    private codeGenerate: CodeGenerateDriver
+    private codeGenerate: CodeGenerateDriver,
+    private sendEmailService: SendEmailService
   ) {}
 
   async execute({ userId }: CreateCodeRequest): Promise<CreateCodeResponse> {
@@ -44,6 +47,12 @@ export class CreateCodeService {
         Date.now() +
           this.EXPIRATION_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
       )
+    })
+
+    await this.sendEmailService.execute({
+      to: user.email,
+      subject: 'Lista&Compra - Verification Code',
+      body: verificationCodeTemplate({ code: code.value })
     })
 
     return { code }
