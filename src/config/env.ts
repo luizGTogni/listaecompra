@@ -7,7 +7,9 @@ const envSchema = z.object({
     .enum(['warn', 'error', 'fatal', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
   PORT: z.coerce.number().default(3000),
-  JWT_SECRET: z.string()
+  JWT_SECRET: z.string(),
+  RESEND_API_KEY: z.string(),
+  MAIL_FROM: z.string().default('Lista&Compra <onboarding@resend.dev>')
 })
 
 const _env = envSchema.safeParse(process.env)
