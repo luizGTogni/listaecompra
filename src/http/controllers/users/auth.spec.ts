@@ -15,7 +15,7 @@ describe('Auth Controller (e2e)', () => {
     const data = {
       name: 'John Doe',
       username: 'johndoe',
-      email: 'johndoe@email.com',
+      email: 'contato.togni@gmail.com',
       password: '123456'
     }
 
