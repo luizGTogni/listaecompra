@@ -11,10 +11,6 @@ export const verifyUserResponseSchema = {
   500: errorSchema
 }
 
-export const verifyUserAuthorizationSchema = z.object({
-  sub: z.string()
-})
-
 export const verifyUserBodySchema = z.object({
   codeValue: z.string()
 })
