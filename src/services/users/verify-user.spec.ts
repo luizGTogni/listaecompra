@@ -42,7 +42,8 @@ describe('Verify User Service', () => {
     const code = await codeRepository.create({
       entityId: user.id,
       expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-      value: 'A1S5C'
+      value: 'A1S5C',
+      codeType: 'user_verification'
     })
 
     expect(user.verifiedAt).toBeNull()
@@ -128,7 +129,8 @@ describe('Verify User Service', () => {
     const code = await codeRepository.create({
       entityId: user.id,
       expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-      value: 'A1S5C'
+      value: 'A1S5C',
+      codeType: 'user_verification'
     })
 
     code.isValid = false
@@ -159,7 +161,8 @@ describe('Verify User Service', () => {
     const code = await codeRepository.create({
       entityId: user.id,
       expiredAt: new Date(Date.now() + 15 * 60 * 1000),
-      value: 'A1S5C'
+      value: 'A1S5C',
+      codeType: 'user_verification'
     })
 
     vi.setSystemTime(new Date('2026-09-01T10:16:00Z'))

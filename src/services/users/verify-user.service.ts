@@ -29,7 +29,8 @@ export class VerifyUserService {
 
     const code = await this.codeRepository.findByValueAndEntityId(
       codeValue,
-      userId
+      userId,
+      'user_verification'
     )
 
     if (!code) {

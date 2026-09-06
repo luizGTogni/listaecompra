@@ -1,13 +1,17 @@
-import { Code } from '@/domain/code.entity.js'
+import { Code, CodeType } from '@/domain/code.entity.js'
 import { CodeGenerateDriver } from '@/drivers/code/code-generate.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
-import { SendEmailService } from '../email/send-email.service.js'
-import { verificationCodeTemplate } from '../email/templates/verification-code.template.js'
+
+const CODE_EXPIRATION_MINUTES: Record<CodeType, number> = {
+  user_verification: 15,
+  password_reset: 30
+}
 
 interface CreateCodeRequest {
   userId: string
+  codeType: CodeType
 }
 
 interface CreateCodeResponse {
@@ -15,23 +19,24 @@ interface CreateCodeResponse {
 }
 
 export class CreateCodeService {
-  private readonly EXPIRATION_MINUTES = 15
-
   constructor(
     private userRepository: UserRepository,
     private codeRepository: CodeRepository,
-    private codeGenerate: CodeGenerateDriver,
-    private sendEmailService: SendEmailService
+    private codeGenerate: CodeGenerateDriver
   ) {}
 
-  async execute({ userId }: CreateCodeRequest): Promise<CreateCodeResponse> {
+  async execute({
+    userId,
+
+    codeType
+  }: CreateCodeRequest): Promise<CreateCodeResponse> {
     const user = await this.userRepository.findById(userId)
 
     if (!user) {
       throw new ResourceNotFoundError()
     }
 
-    await this.codeRepository.updateAllActiveByEntityId(userId, {
+    await this.codeRepository.updateAllActiveByEntityId(userId, codeType, {
       isValid: false
     })
 
@@ -39,20 +44,16 @@ export class CreateCodeService {
 
     const SECONDS_PER_MINUTE = 60
     const MILLISECONDS_PER_SECOND = 1000
+    const expirationMinutes = CODE_EXPIRATION_MINUTES[codeType]
 
     const code = await this.codeRepository.create({
       entityId: userId,
       value: codeValue,
+      codeType,
       expiredAt: new Date(
         Date.now() +
-          this.EXPIRATION_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
+          expirationMinutes * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
       )
-    })
-
-    await this.sendEmailService.execute({
-      to: user.email,
-      subject: 'Lista&Compra - Verification Code',
-      body: verificationCodeTemplate({ code: code.value })
     })
 
     return { code }
