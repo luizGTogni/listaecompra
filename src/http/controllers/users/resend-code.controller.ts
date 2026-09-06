@@ -1,16 +1,16 @@
-import { makeCreateCodeService } from '@/http/factories/make-create-code-service.factory.js'
-import { resendCodeAuthorizationSchema } from '@/http/schemas/users/resend-code.schema.js'
+import { makeResendCodeService } from '@/http/factories/make-resend-code-service.factory.js'
+import { userAuthSchema } from '@/http/schemas/auth/user-auth.schema.js'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export async function resendCodeController(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { sub } = resendCodeAuthorizationSchema.parse(request.user)
+  const { sub } = userAuthSchema.parse(request.user)
 
-  const createCodeService = makeCreateCodeService()
+  const resendCodeService = makeResendCodeService()
 
-  await createCodeService.execute({ userId: sub })
+  await resendCodeService.execute({ userId: sub })
 
   reply.status(204).send({})
 }

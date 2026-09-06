@@ -32,13 +32,13 @@ describe('Create User Service', () => {
     createCodeService = new CreateCodeService(
       userRepository,
       codeRepository,
-      codeGenerate,
-      sendEmailService
+      codeGenerate
     )
     sut = new CreateUserService(
       userRepository,
       passwordHasher,
-      createCodeService
+      createCodeService,
+      sendEmailService
     )
   })
 
@@ -96,5 +96,22 @@ describe('Create User Service', () => {
         passwordPlain: '123456'
       })
     ).rejects.toBeInstanceOf(ResourceAlreadyExistsError)
+  })
+
+  it('should send verification code email', async () => {
+    const { user } = await sut.execute({
+      name: 'John Doe',
+      username: 'johndoe',
+      email: 'johndoe@email.com',
+      passwordPlain: '12345678'
+    })
+
+    expect(emailDriver.emails).toHaveLength(1)
+    expect(emailDriver.emails[0]).toEqual({
+      from: 'from@test.com',
+      to: user.email,
+      subject: 'Lista&Compra - Verification Code',
+      body: expect.any(String)
+    })
   })
 })

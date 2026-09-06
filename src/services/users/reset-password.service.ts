@@ -1,36 +1,26 @@
+import { PasswordHashDriver } from '@/drivers/password/password-hash.driver.js'
 import { CodeExpiredError } from '@/http/types/errors/code-expired.error.js'
 import { CodeInvalidError } from '@/http/types/errors/code-invalid.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
-import { UserAlreadyVerifiedError } from '@/http/types/errors/user-already-verified.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
 
-interface VerifyUserRequest {
-  userId: string
+interface ResetPasswordRequest {
   codeValue: string
+  newPassword: string
 }
 
-export class VerifyUserService {
+export class ResetPasswordService {
   constructor(
     private userRepository: UserRepository,
-    private codeRepository: CodeRepository
+    private codeRepository: CodeRepository,
+    private passwordHash: PasswordHashDriver
   ) {}
 
-  async execute({ userId, codeValue }: VerifyUserRequest): Promise<void> {
-    const user = await this.userRepository.findById(userId)
-
-    if (!user) {
-      throw new ResourceNotFoundError()
-    }
-
-    if (user.verifiedAt) {
-      throw new UserAlreadyVerifiedError()
-    }
-
-    const code = await this.codeRepository.findByValueAndEntityId(
-      codeValue,
-      userId,
-      'user_verification'
+  async execute(data: ResetPasswordRequest): Promise<void> {
+    const code = await this.codeRepository.findByValue(
+      data.codeValue,
+      'password_reset'
     )
 
     if (!code) {
@@ -47,11 +37,19 @@ export class VerifyUserService {
       throw new CodeExpiredError()
     }
 
+    const user = await this.userRepository.findById(code.entityId)
+
+    if (!user) {
+      throw new ResourceNotFoundError()
+    }
+
     code.isValid = false
 
     await this.codeRepository.update(code)
 
-    user.verifiedAt = new Date()
+    const passwordHash = await this.passwordHash.hash(data.newPassword)
+
+    user.passwordHash = passwordHash
 
     await this.userRepository.update(user)
   }
