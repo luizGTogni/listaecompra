@@ -1,4 +1,4 @@
-import { Code, CodeInput } from '@/domain/code.entity.js'
+import { Code, CodeInput, CodeType } from '@/domain/code.entity.js'
 import { randomUUID } from 'node:crypto'
 import { CodeRepository } from './code.repository.js'
 
@@ -10,6 +10,7 @@ export class InMemoryCodeRepository implements CodeRepository {
       id: randomUUID(),
       entityId: data.entityId,
       value: data.value,
+      codeType: data.codeType,
       expiredAt: data.expiredAt,
       isValid: true,
       createdAt: new Date()
@@ -32,16 +33,18 @@ export class InMemoryCodeRepository implements CodeRepository {
 
   async updateAllActiveByEntityId(
     entityId: string,
+    codeType: CodeType,
     data: { isValid: boolean }
   ) {
     const codesFound = this.items.filter(
-      (item) => item.entityId === entityId && item.isValid
+      (item) =>
+        item.entityId === entityId && item.isValid && item.codeType === codeType
     )
     await Promise.all(
       codesFound.map((c) => {
         c.isValid = data.isValid
 
-        this.update(c)
+        return this.update(c)
       })
     )
   }
@@ -56,17 +59,25 @@ export class InMemoryCodeRepository implements CodeRepository {
     return { ...code }
   }
 
-  async findAllActiveByEntityId(entityId: string) {
+  async findAllActiveByEntityId(entityId: string, codeType: CodeType) {
     const codesFound = this.items.filter(
-      (item) => item.entityId === entityId && item.isValid
+      (item) =>
+        item.entityId === entityId && item.isValid && item.codeType === codeType
     )
 
     return codesFound
   }
 
-  async findByValueAndEntityId(value: string, entityId: string) {
+  async findByValueAndEntityId(
+    value: string,
+    entityId: string,
+    codeType: CodeType
+  ) {
     const code = this.items.find(
-      (item) => item.entityId === entityId && item.value == value
+      (item) =>
+        item.entityId === entityId &&
+        item.value == value &&
+        item.codeType === codeType
     )
 
     if (!code) {
@@ -74,6 +85,14 @@ export class InMemoryCodeRepository implements CodeRepository {
     }
 
     return { ...code }
+  }
+
+  async findByValue(value: string, codeType: CodeType) {
+    const code = this.items.find(
+      (item) => item.value === value && item.codeType === codeType
+    )
+
+    return code ? { ...code } : null
   }
 }
 
