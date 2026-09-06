@@ -14,14 +14,13 @@
 [ ] RF10 - O sistema deve permitir que o usuário finalize a compra dos produtos na lista.
 [ ] RF11 - O sistema deve permitir que o usuário crie uma lista de compras.
 [ ] RF12 - O sistema deve permitir que o usuário compartilhe a lista de compras com outros usuários.
-[ ] RF13 - O sistema deve permitir que o usuário recupere a senha via e-mail (esqueci minha senha).
-[ ] RF14 - O sistema deve permitir que o usuário altere sua senha.
+[x] RF13 - O sistema deve permitir que o usuário recupere a senha via e-mail (esqueci minha senha).
+[x] RF14 - O sistema deve permitir que o usuário altere sua senha.
 [ ] RF16 - O sistema deve permitir que o usuário edite a quantidade de um produto na lista.
 [ ] RF18 - O sistema deve permitir que o usuário marque um produto como "já comprado" sem removê-lo da lista.
 [ ] RF19 - O sistema deve permitir que o usuário desmaque um produto como "já comprado".
 [ ] RF20 - O sistema deve permitir que o usuário remova o compartilhamento de uma lista com outro usuário.
 [ ] RF21 - O sistema deve permitir que o usuário exclua uma lista de compras.
-[ ] RF21 - O sistema deve permitir que o usuário faça logout da plataforma.
 
 ## Regras de Negócio (RN)
 
@@ -40,7 +39,7 @@
 [ ] RN13 - Um usuário convidado (lista compartilhada) pode adicionar/remover produtos, mas não excluir a lista.
 [ ] RN14 - Um produto marcado como "comprado" não pode ter a quantidade editada, apenas removido.
 [x] RN15 - O sistema não deve permitir login antes da verificação de e-mail (reforça o RN02).
-[ ] RN16 - O token de recuperação de senha deve expirar após um período determinado (ex: 30 minutos).
+[x] RN16 - O token de recuperação de senha deve expirar após um período determinado (ex: 30 minutos).
 
 ## Requisitos Não Funcionais (RNF)
 
