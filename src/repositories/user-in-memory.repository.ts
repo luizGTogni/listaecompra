@@ -29,6 +29,10 @@ export class InMemoryUserRepository implements UserRepository {
     return { ...userUpdated }
   }
 
+  async deleteAll() {
+    this.items = []
+  }
+
   async findById(id: string) {
     const user = this.items.find((item) => item.id === id)
 

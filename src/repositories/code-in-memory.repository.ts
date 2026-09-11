@@ -49,6 +49,10 @@ export class InMemoryCodeRepository implements CodeRepository {
     )
   }
 
+  async deleteAll() {
+    this.items = []
+  }
+
   async findById(id: string) {
     const code = this.items.find((item) => item.id === id)
 

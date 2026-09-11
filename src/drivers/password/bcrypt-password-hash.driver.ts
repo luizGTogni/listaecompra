@@ -9,6 +9,6 @@ export class BcryptPasswordHashDriver implements PasswordHashDriver {
   }
 
   async verify(plain: string, hashed: string) {
-    return compare(plain, hashed)
+    return await compare(plain, hashed)
   }
 }
