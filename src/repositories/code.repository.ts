@@ -8,6 +8,7 @@ export interface CodeRepository {
     codeType: CodeType,
     data: { isValid: boolean }
   ): Promise<void>
+  deleteAll(): Promise<void>
   findById(id: string): Promise<Code | null>
   findAllActiveByEntityId(entityId: string, codeType: CodeType): Promise<Code[]>
   findByValue(value: string, codeType: CodeType): Promise<Code | null>
