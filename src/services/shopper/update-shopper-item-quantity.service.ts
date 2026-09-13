@@ -4,8 +4,8 @@ import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.er
 import { ShopperItemAlreadyPurchasedError } from '@/http/types/errors/shopper-item-already-purchased.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
-import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
-import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
+import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 
 interface UpdateShopperItemQuantityRequest {
   userId: string
@@ -20,39 +20,40 @@ interface UpdateShopperItemQuantityResponse {
 
 export class UpdateShopperItemQuantityService {
   constructor(
-    private userRepository: UserRepository,
-    private shopperListRepository: ShopperListRepository,
+    private getUserFound: GetUserFoundService,
+    private getShopperListAccess: GetShopperListAccessService,
     private shopperItemRepository: ShopperItemRepository
   ) {}
 
   async execute(
     data: UpdateShopperItemQuantityRequest
   ): Promise<UpdateShopperItemQuantityResponse> {
-    const user = await this.userRepository.findById(data.userId)
-    const shopperList = await this.shopperListRepository.findByIdAndUserId(
-      data.shopperListId,
-      data.userId
-    )
+    if (data.quantity < 0) {
+      throw new InvalidItemQuantityError()
+    }
+
+    await this.getUserFound.execute({ userId: data.userId })
+    const shopperList = await this.getShopperListAccess.execute({
+      shopperListId: data.shopperListId,
+      userId: data.userId
+    })
+
+    if (shopperList.closedAt) {
+      throw new ShopperListClosedError()
+    }
+
     const shopperItem =
       await this.shopperItemRepository.findByIdAndShopperListId(
         data.shopperItemId,
         data.shopperListId
       )
 
-    if (!user || !shopperList || !shopperItem) {
+    if (!shopperItem) {
       throw new ResourceNotFoundError()
-    }
-
-    if (shopperList.closedAt) {
-      throw new ShopperListClosedError()
     }
 
     if (shopperItem.purchasedAt) {
       throw new ShopperItemAlreadyPurchasedError()
-    }
-
-    if (data.quantity < 0) {
-      throw new InvalidItemQuantityError()
     }
 
     if (data.quantity === 0) {

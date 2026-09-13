@@ -10,6 +10,7 @@ export interface ShopperListRepository {
   update(shopperList: ShopperList): Promise<ShopperList>
   delete(id: string): Promise<void>
   deleteAll(): Promise<void>
+  findById(id: string): Promise<ShopperList | null>
   findByIdAndUserId(id: string, userId: string): Promise<ShopperList | null>
   findByTitleAndUserId(
     title: string,

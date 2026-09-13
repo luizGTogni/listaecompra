@@ -4,9 +4,11 @@ import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-me
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
 import { FindAllShopperListService } from './find-all-shopper-list.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
 let sut: FindAllShopperListService
 
@@ -15,8 +17,9 @@ let user: User
 describe('Find All Shopper List', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
-    sut = new FindAllShopperListService(userRepository, shopperListRepository)
+    sut = new FindAllShopperListService(getUserFound, shopperListRepository)
 
     user = await userRepository.create({
       name: 'John Doe',

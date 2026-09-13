@@ -1,11 +1,10 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
-import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
-import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
-import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
+import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 
 interface AddItemShopperListRequest {
   userId: string
@@ -21,28 +20,20 @@ interface AddItemShopperListResponse {
 
 export class AddItemShopperListService {
   constructor(
-    private userRepository: UserRepository,
-    private shopperListRepository: ShopperListRepository,
+    private getUserFound: GetUserFoundService,
+    private getShopperListAccess: GetShopperListAccessService,
     private shopperItemRepository: ShopperItemRepository
   ) {}
 
   async execute(
     data: AddItemShopperListRequest
   ): Promise<AddItemShopperListResponse> {
-    const user = await this.userRepository.findById(data.userId)
+    const user = await this.getUserFound.execute({ userId: data.userId })
 
-    if (!user) {
-      throw new ResourceNotFoundError()
-    }
-
-    const shopperList = await this.shopperListRepository.findByIdAndUserId(
-      data.shopperListId,
-      data.userId
-    )
-
-    if (!shopperList) {
-      throw new ResourceNotFoundError()
-    }
+    const shopperList = await this.getShopperListAccess.execute({
+      shopperListId: data.shopperListId,
+      userId: user.id
+    })
 
     if (shopperList.closedAt) {
       throw new ShopperListClosedError()

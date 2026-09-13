@@ -44,6 +44,12 @@ export class InMemoryShopperListRepository implements ShopperListRepository {
     this.items = []
   }
 
+  async findById(id: string) {
+    const shopperList = this.items.find((item) => item.id === id)
+
+    return shopperList ? { ...shopperList } : null
+  }
+
   async findByIdAndUserId(id: string, userId: string) {
     const shopperList = this.items.find(
       (item) => item.id === id && item.userId === userId
