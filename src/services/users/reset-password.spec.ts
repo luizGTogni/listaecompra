@@ -7,9 +7,11 @@ import { InMemoryCodeRepository } from '@/repositories/code-in-memory.repository
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 import { ResetPasswordService } from './reset-password.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let codeRepository: CodeRepository
 let passwordHash: PasswordHashDriver
 let sut: ResetPasswordService
@@ -17,9 +19,15 @@ let sut: ResetPasswordService
 describe('Reset Password Service', () => {
   beforeEach(() => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     codeRepository = new InMemoryCodeRepository()
     passwordHash = new MockPasswordHashDriver()
-    sut = new ResetPasswordService(userRepository, codeRepository, passwordHash)
+    sut = new ResetPasswordService(
+      getUserFound,
+      userRepository,
+      codeRepository,
+      passwordHash
+    )
 
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-09-01T10:00:00Z'))

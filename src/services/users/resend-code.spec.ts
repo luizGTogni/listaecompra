@@ -8,9 +8,11 @@ import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository
 import { UserRepository } from '@/repositories/user.repository.js'
 import { SendEmailService } from '../email/send-email.service.js'
 import { CreateCodeService } from '../token/create-code.service.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 import { ResendCodeService } from './resend-code.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let codeRepository: CodeRepository
 let codeGenerate: CodeGenerateDriver
 let createCodeService: CreateCodeService
@@ -21,6 +23,7 @@ let sut: ResendCodeService
 describe('Resend Code Service', () => {
   beforeEach(() => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     codeRepository = new InMemoryCodeRepository()
     codeGenerate = new RandomCodeGenerateDriver()
     emailDriver = new MockEmailDriver()
@@ -31,6 +34,7 @@ describe('Resend Code Service', () => {
       codeGenerate
     )
     sut = new ResendCodeService(
+      getUserFound,
       userRepository,
       createCodeService,
       sendEmailService

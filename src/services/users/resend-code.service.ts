@@ -3,6 +3,7 @@ import { UserRepository } from '@/repositories/user.repository.js'
 import { SendEmailService } from '../email/send-email.service.js'
 import { verificationCodeTemplate } from '../email/templates/verification-code.template.js'
 import { CreateCodeService } from '../token/create-code.service.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 
 interface ResendCodeRequest {
   userId: string
@@ -10,13 +11,14 @@ interface ResendCodeRequest {
 
 export class ResendCodeService {
   constructor(
+    private getUserFound: GetUserFoundService,
     private userRepository: UserRepository,
     private createCodeService: CreateCodeService,
     private sendEmailService: SendEmailService
   ) {}
 
   async execute({ userId }: ResendCodeRequest): Promise<void> {
-    const user = await this.userRepository.findById(userId)
+    const user = await this.getUserFound.execute({ userId })
 
     if (!user) {
       throw new ResourceNotFoundError()
