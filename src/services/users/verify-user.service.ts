@@ -4,6 +4,7 @@ import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.er
 import { UserAlreadyVerifiedError } from '@/http/types/errors/user-already-verified.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 
 interface VerifyUserRequest {
   userId: string
@@ -12,16 +13,13 @@ interface VerifyUserRequest {
 
 export class VerifyUserService {
   constructor(
+    private getUserFound: GetUserFoundService,
     private userRepository: UserRepository,
     private codeRepository: CodeRepository
   ) {}
 
   async execute({ userId, codeValue }: VerifyUserRequest): Promise<void> {
-    const user = await this.userRepository.findById(userId)
-
-    if (!user) {
-      throw new ResourceNotFoundError()
-    }
+    const user = await this.getUserFound.execute({ userId })
 
     if (user.verifiedAt) {
       throw new UserAlreadyVerifiedError()

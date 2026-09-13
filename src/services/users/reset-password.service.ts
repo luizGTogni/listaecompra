@@ -4,6 +4,7 @@ import { CodeInvalidError } from '@/http/types/errors/code-invalid.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 
 interface ResetPasswordRequest {
   codeValue: string
@@ -12,6 +13,7 @@ interface ResetPasswordRequest {
 
 export class ResetPasswordService {
   constructor(
+    private getUserFound: GetUserFoundService,
     private userRepository: UserRepository,
     private codeRepository: CodeRepository,
     private passwordHash: PasswordHashDriver
@@ -37,11 +39,7 @@ export class ResetPasswordService {
       throw new CodeExpiredError()
     }
 
-    const user = await this.userRepository.findById(code.entityId)
-
-    if (!user) {
-      throw new ResourceNotFoundError()
-    }
+    const user = await this.getUserFound.execute({ userId: code.entityId })
 
     code.isValid = false
 

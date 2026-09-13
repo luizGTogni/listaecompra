@@ -4,17 +4,24 @@ import { User } from '@/domain/user.entity.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperItemAlreadyPurchasedError } from '@/http/types/errors/shopper-item-already-purchased.error.js'
+import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { InMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
 import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
+import { InMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
+import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
+import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 import { UpdateShopperItemQuantityService } from './update-shopper-item-quantity.service.js'
-import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js';
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
+let shopperListMemberRepository: ShopperListMemberRepository
+let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
 let sut: UpdateShopperItemQuantityService
 
@@ -25,11 +32,17 @@ let shopperItemCreated: ShopperItem
 describe('Toggle Purchased Shopper Item', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    getShopperListAccess = new GetShopperListAccessService(
+      shopperListRepository,
+      shopperListMemberRepository
+    )
     shopperItemRepository = new InMemoryShopperItemRepository()
     sut = new UpdateShopperItemQuantityService(
-      userRepository,
-      shopperListRepository,
+      getUserFound,
+      getShopperListAccess,
       shopperItemRepository
     )
 

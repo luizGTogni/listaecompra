@@ -6,17 +6,20 @@ import { InMemoryCodeRepository } from '@/repositories/code-in-memory.repository
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 import { VerifyUserService } from './verify-user.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let codeRepository: CodeRepository
 let sut: VerifyUserService
 
 describe('Verify User Service', () => {
   beforeEach(() => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     codeRepository = new InMemoryCodeRepository()
-    sut = new VerifyUserService(userRepository, codeRepository)
+    sut = new VerifyUserService(getUserFound, userRepository, codeRepository)
 
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-09-01T10:00:00Z'))

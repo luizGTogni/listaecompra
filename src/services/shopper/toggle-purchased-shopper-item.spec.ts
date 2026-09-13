@@ -6,13 +6,20 @@ import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.
 import { InMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
 import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
+import { InMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
+import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
+import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 import { TogglePurchasedShopperItemService } from './toggle-purchased-shopper-item.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
+let shopperListMemberRepository: ShopperListMemberRepository
+let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
 let sut: TogglePurchasedShopperItemService
 
@@ -23,11 +30,17 @@ let shopperItemCreated: ShopperItem
 describe('Toggle Purchased Shopper Item', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    getShopperListAccess = new GetShopperListAccessService(
+      shopperListRepository,
+      shopperListMemberRepository
+    )
     shopperItemRepository = new InMemoryShopperItemRepository()
     sut = new TogglePurchasedShopperItemService(
-      userRepository,
-      shopperListRepository,
+      getUserFound,
+      getShopperListAccess,
       shopperItemRepository
     )
 
@@ -107,7 +120,7 @@ describe('Toggle Purchased Shopper Item', () => {
       purchasedAt: null
     })
   })
-  
+
   it('should not be able to toggle purchased shopper item quantity if shopper list already closed', async () => {
     await shopperListRepository.update({
       ...shopperList,

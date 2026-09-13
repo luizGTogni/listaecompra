@@ -5,13 +5,20 @@ import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.er
 import { InMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
 import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
+import { InMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
+import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
 import { FindOneShopperListService } from './find-one-shopper-list.service.js'
+import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
+let shopperListMemberRepository: ShopperListMemberRepository
+let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
 let sut: FindOneShopperListService
 
@@ -23,10 +30,17 @@ let shopperItem2: ShopperItem
 describe('Find One Shopper List', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    getShopperListAccess = new GetShopperListAccessService(
+      shopperListRepository,
+      shopperListMemberRepository
+    )
     shopperItemRepository = new InMemoryShopperItemRepository()
     sut = new FindOneShopperListService(
-      userRepository,
+      getUserFound,
+      getShopperListAccess,
       shopperListRepository,
       shopperItemRepository
     )

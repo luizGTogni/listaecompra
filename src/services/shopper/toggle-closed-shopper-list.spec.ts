@@ -5,9 +5,11 @@ import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-me
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
 import { ToggleClosedShopperListService } from './toggle-closed-shopper-list.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
 let sut: ToggleClosedShopperListService
 
@@ -17,9 +19,10 @@ let shopperListCreated: ShopperList
 describe('Toggle Closed Shopper List', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
     sut = new ToggleClosedShopperListService(
-      userRepository,
+      getUserFound,
       shopperListRepository
     )
 

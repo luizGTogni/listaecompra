@@ -1,10 +1,13 @@
 import { API_URL_V1_BASE } from '@/config/env.js'
 import { User } from '@/domain/user.entity.js'
+import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
+import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { FastifyInstance } from 'fastify'
 import request from 'supertest'
 
 interface CreateAndAuthUserParams {
   app: FastifyInstance
+  isVerified?: boolean
   user?: {
     name: string
     username: string
@@ -20,6 +23,7 @@ interface CreateAndAuthUserResponse {
 
 export async function createAndAuthUser({
   app,
+  isVerified = true,
   user = {
     name: 'John Doe',
     username: 'johndoe',
@@ -37,6 +41,18 @@ export async function createAndAuthUser({
       email: user.email,
       password: user.password
     })
+
+  const userCreated: User = responseUser.body.user
+
+  const userFounded = await inMemoryUserRepository.findById(userCreated.id)
+  if (!userFounded) {
+    throw new ResourceNotFoundError()
+  }
+
+  await inMemoryUserRepository.update({
+    ...userFounded,
+    verifiedAt: isVerified ? new Date() : null
+  })
 
   return { token: responseAuth.body.token, user: responseUser.body.user }
 }

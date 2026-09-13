@@ -4,6 +4,7 @@ import { FastifyInstance } from 'fastify'
 import { makeAuthenticate } from '../middlewares/authenticate.middleware.js'
 import { makeRequireVerified } from '../middlewares/require-verified.middleware.js'
 import { authRoutes } from './protected/index.js'
+import { verifiedRoutes } from './protected/verified/index.js'
 import { publicRoutes } from './publics/index.js'
 
 const tokenDriver = new JwtTokenDriver()
@@ -20,8 +21,7 @@ export async function appRoutes(app: FastifyInstance) {
 
     authApp.register(async (verifiedApp) => {
       verifiedApp.addHook('onRequest', requireVerified)
-
-      // SEM ROTA AINDA VERIFICADA
+      verifiedApp.register(verifiedRoutes)
     })
   })
 }

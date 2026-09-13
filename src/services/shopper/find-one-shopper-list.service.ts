@@ -1,9 +1,9 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { ShopperList } from '@/domain/shopper-list.entity.js'
-import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
-import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundService } from '../users/get-user-found.service.js'
+import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 
 interface FindOneShopperListRequest {
   userId: string
@@ -18,7 +18,8 @@ interface FindOneShopperListResponse {
 
 export class FindOneShopperListService {
   constructor(
-    private userRepository: UserRepository,
+    private getUserFound: GetUserFoundService,
+    private getShopperListAcess: GetShopperListAccessService,
     private shopperListRepository: ShopperListRepository,
     private shopperItemRepository: ShopperItemRepository
   ) {}
@@ -26,15 +27,11 @@ export class FindOneShopperListService {
   async execute(
     data: FindOneShopperListRequest
   ): Promise<FindOneShopperListResponse> {
-    const user = await this.userRepository.findById(data.userId)
-    const shopperList = await this.shopperListRepository.findByIdAndUserId(
-      data.shopperListId,
-      data.userId
-    )
-
-    if (!user || !shopperList) {
-      throw new ResourceNotFoundError()
-    }
+    await this.getUserFound.execute({ userId: data.userId })
+    const shopperList = await this.getShopperListAcess.execute({
+      shopperListId: data.shopperListId,
+      userId: data.userId
+    })
 
     const items = await this.shopperItemRepository.findAllByShopperListId(
       shopperList.id

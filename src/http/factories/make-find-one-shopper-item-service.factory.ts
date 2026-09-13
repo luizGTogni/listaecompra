@@ -1,8 +1,21 @@
-import { inMemoryShopperItemRepository } from "@/repositories/shopper-item-in-memory.repository.js";
-import { inMemoryShopperListRepository } from "@/repositories/shopper-list-in-memory.repository.js";
-import { inMemoryUserRepository } from "@/repositories/user-in-memory.repository.js";
-import { FindOneShopperItemService } from "@/services/shopper/find-one-shopper-item.service.js";
+import { inMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
+import { inMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
+import { inMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
+import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { FindOneShopperItemService } from '@/services/shopper/find-one-shopper-item.service.js'
+import { GetShopperListAccessService } from '@/services/shopper/get-shopper-list-access.service.js'
+import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
 
 export function makeFindOneShopperItemService() {
-  return new FindOneShopperItemService(inMemoryUserRepository, inMemoryShopperListRepository, inMemoryShopperItemRepository)
+  const getUserFound = new GetUserFoundService(inMemoryUserRepository)
+  const getShopperListAccess = new GetShopperListAccessService(
+    inMemoryShopperListRepository,
+    inMemoryShopperListMemberRepository
+  )
+
+  return new FindOneShopperItemService(
+    getUserFound,
+    getShopperListAccess,
+    inMemoryShopperItemRepository
+  )
 }

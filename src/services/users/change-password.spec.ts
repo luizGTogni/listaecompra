@@ -6,16 +6,23 @@ import { SamePasswordError } from '@/http/types/errors/same-password.error.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
 import { ChangePasswordService } from './change-password.service.js'
+import { GetUserFoundService } from './get-user-found.service.js'
 
 let userRepository: UserRepository
+let getUserFound: GetUserFoundService
 let passwordHasher: PasswordHashDriver
 let sut: ChangePasswordService
 
 describe('Change Password Service', () => {
   beforeEach(() => {
     userRepository = new InMemoryUserRepository()
+    getUserFound = new GetUserFoundService(userRepository)
     passwordHasher = new MockPasswordHashDriver()
-    sut = new ChangePasswordService(userRepository, passwordHasher)
+    sut = new ChangePasswordService(
+      getUserFound,
+      userRepository,
+      passwordHasher
+    )
   })
 
   it('should be able to change user password', async () => {
