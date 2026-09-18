@@ -20,8 +20,38 @@ export class InMemoryShopperListMemberRepository implements ShopperListMemberRep
     return { ...shopperListMember }
   }
 
+  async update(shopperListMember: ShopperListMember) {
+    const shopperListMemberIndex = this.items.findIndex(
+      (item) =>
+        item.shopperListId === shopperListMember.shopperListId &&
+        item.memberId === shopperListMember.memberId
+    )
+
+    this.items[shopperListMemberIndex] = shopperListMember
+
+    return { ...shopperListMember }
+  }
+
+  async deleteByShopperListIdAndMemberId(
+    shopperListId: string,
+    memberId: string
+  ) {
+    const shopperListMembers = this.items.filter(
+      (item) =>
+        !(item.shopperListId === shopperListId && item.memberId === memberId)
+    )
+
+    this.items = shopperListMembers
+  }
+
   async deleteAll() {
     this.items = []
+  }
+
+  async deleteAllByShopperListId(shopperListId: string) {
+    this.items = this.items.filter(
+      (item) => item.shopperListId !== shopperListId
+    )
   }
 
   async findByShopperListIdAndMemberId(
@@ -34,6 +64,22 @@ export class InMemoryShopperListMemberRepository implements ShopperListMemberRep
     )
 
     return membership ? { ...membership } : null
+  }
+
+  async findAllByShopperListId(shopperListId: string) {
+    return this.items.filter((item) => item.shopperListId === shopperListId)
+  }
+
+  async findAllByMemberId(memberId: string, onlyInvite: boolean) {
+    if (onlyInvite) {
+      return this.items.filter(
+        (item) => item.memberId === memberId && item.acceptedAt === null
+      )
+    }
+
+    return this.items.filter(
+      (item) => item.memberId === memberId && item.acceptedAt
+    )
   }
 }
 
