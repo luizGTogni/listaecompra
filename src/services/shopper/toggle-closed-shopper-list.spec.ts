@@ -2,6 +2,8 @@ import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
+import { InMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
+import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
@@ -11,6 +13,7 @@ import { ToggleClosedShopperListService } from './toggle-closed-shopper-list.ser
 let userRepository: UserRepository
 let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
+let shopperListMemberRepository: ShopperListMemberRepository
 let sut: ToggleClosedShopperListService
 
 let user: User
@@ -21,6 +24,7 @@ describe('Toggle Closed Shopper List', () => {
     userRepository = new InMemoryUserRepository()
     getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
     sut = new ToggleClosedShopperListService(
       getUserFound,
       shopperListRepository
@@ -106,6 +110,32 @@ describe('Toggle Closed Shopper List', () => {
       sut.execute({
         userId: user.id,
         shopperListId: 'shopper-list-not-found'
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should not be able to toggle closed shopper list if member with accepted invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperListCreated.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: member.id,
+        shopperListId: shopperListCreated.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })

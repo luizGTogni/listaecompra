@@ -147,6 +147,78 @@ describe('Toggle Purchased Shopper Item', () => {
     expect(shopperItemUpdated).toBeFalsy()
   })
 
+  it('should be able to update shopper item quantity if member with accepted invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: member.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 3
+    })
+
+    expect(shopperItem).toEqual({
+      ...shopperItemCreated,
+      quantity: 3
+    })
+  })
+
+  it('should not be able to update shopper item quantity if member with pending invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: member.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id,
+        quantity: 3
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should not be able to update shopper item quantity if user not member', async () => {
+    const userNotAccess = await userRepository.create({
+      name: 'Warner Doe',
+      username: 'warnerdoe',
+      email: 'warnerdoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: userNotAccess.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id,
+        quantity: 3
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
   it('should not be able to update shopper item quantity if user not found', async () => {
     await expect(() =>
       sut.execute({

@@ -121,6 +121,72 @@ describe('Toggle Purchased Shopper Item', () => {
     })
   })
 
+  it('should be able to toggle purchased shopper item if member with accepted invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: member.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    expect(shopperItem.purchasedAt).toBeTruthy()
+  })
+
+  it('should not be able to toggle purchased shopper item if member with pending invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: member.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should not be able to toggle purchased shopper item if user not member', async () => {
+    const userNotAccess = await userRepository.create({
+      name: 'Warner Doe',
+      username: 'warnerdoe',
+      email: 'warnerdoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: userNotAccess.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
   it('should not be able to toggle purchased shopper item quantity if shopper list already closed', async () => {
     await shopperListRepository.update({
       ...shopperList,

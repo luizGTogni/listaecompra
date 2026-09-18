@@ -82,6 +82,80 @@ describe('Find One Shopper Item', () => {
     })
   })
 
+  it('should be able to find one shopper item if member with accepted invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperListCreated.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: member.id,
+      shopperListId: shopperListCreated.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    expect(shopperItem).toEqual({
+      ...shopperItemCreated,
+      shopperList: {
+        userId: shopperListCreated.userId,
+        title: shopperListCreated.title,
+        description: shopperListCreated.description,
+        closedAt: shopperListCreated.closedAt
+      }
+    })
+  })
+
+  it('should not be able to find one shopper item if member with pending invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await shopperListMemberRepository.create({
+      shopperListId: shopperListCreated.id,
+      memberId: member.id
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: member.id,
+        shopperListId: shopperListCreated.id,
+        shopperItemId: shopperItemCreated.id
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should not be able to find one shopper item if user not member', async () => {
+    const userNotAccess = await userRepository.create({
+      name: 'Warner Doe',
+      username: 'warnerdoe',
+      email: 'warnerdoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: userNotAccess.id,
+        shopperListId: shopperListCreated.id,
+        shopperItemId: shopperItemCreated.id
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
   it('should not be able to add item in shopper item if user not found', async () => {
     await expect(() =>
       sut.execute({
