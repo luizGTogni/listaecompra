@@ -129,6 +129,54 @@ describe('Find All Shopper List Controller (e2e)', () => {
     ])
   })
 
+  it('should not list shopper lists where the user is only a member', async () => {
+    const { token } = await createAndAuthUser({ app })
+    const dataUser = await createAndAuthUser({
+      app,
+      user: {
+        name: 'Susan Doe',
+        username: 'susandoe',
+        email: 'susandoe@email.com',
+        password: 'hasher-123456'
+      }
+    })
+
+    const dataShopperList = {
+      title: 'ShopperList',
+      description: 'ShopperList Description'
+    }
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: dataShopperList.title,
+        description: dataShopperList.description
+      })
+
+    await request(app.server)
+      .post(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/accept`
+      )
+      .set('Authorization', `Bearer ${dataUser.token}`)
+      .send()
+
+    const response = await request(app.server)
+      .get(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${dataUser.token}`)
+      .send()
+
+    expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperLists).toHaveLength(0)
+  })
+
   it('should not be able to find all shopper list if user not auth', async () => {
     const { token } = await createAndAuthUser({ app })
 

@@ -85,6 +85,72 @@ describe('Find One Shopper List', () => {
     })
   })
 
+  it('should be able to find one shopper list if member with accepted invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperListCreated.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    const { shopperList } = await sut.execute({
+      userId: member.id,
+      shopperListId: shopperListCreated.id
+    })
+
+    expect(shopperList).toEqual({
+      ...shopperListCreated,
+      items: [shopperItem1, shopperItem2]
+    })
+  })
+
+  it('should not be able to find one shopper list if member with pending invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await shopperListMemberRepository.create({
+      shopperListId: shopperListCreated.id,
+      memberId: member.id
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: member.id,
+        shopperListId: shopperListCreated.id
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should not be able to find one shopper list if user not member', async () => {
+    const userNotAccess = await userRepository.create({
+      name: 'Warner Doe',
+      username: 'warnerdoe',
+      email: 'warnerdoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    await expect(() =>
+      sut.execute({
+        userId: userNotAccess.id,
+        shopperListId: shopperListCreated.id
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
   it('should not be able to add item in shopper list if user not found', async () => {
     await expect(() =>
       sut.execute({

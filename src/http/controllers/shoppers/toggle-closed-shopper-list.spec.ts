@@ -100,6 +100,58 @@ describe('Toggle Closed Shopper List Controller (e2e)', () => {
     })
   })
 
+  it('should not be able to toggle closed shopper list if member with accepted invite', async () => {
+    const { token } = await createAndAuthUser({ app })
+    const dataUser = await createAndAuthUser({
+      app,
+      user: {
+        name: 'Susan Doe',
+        username: 'susandoe',
+        email: 'susandoe@email.com',
+        password: 'hasher-123456'
+      }
+    })
+
+    const dataShopperList = {
+      title: 'ShopperList',
+      description: 'ShopperList Description'
+    }
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: dataShopperList.title,
+        description: dataShopperList.description
+      })
+
+    await request(app.server)
+      .post(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/accept`
+      )
+      .set('Authorization', `Bearer ${dataUser.token}`)
+      .send()
+
+    const response = await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/close`
+      )
+      .set('Authorization', `Bearer ${dataUser.token}`)
+      .send()
+
+    expect(response.statusCode).toEqual(404)
+    expect(response.body).toEqual(
+      expect.objectContaining({ name: 'ResourceNotFound' })
+    )
+  })
+
   it('should not be able to toggle closed shopper list if user not auth', async () => {
     const { token } = await createAndAuthUser({ app })
 

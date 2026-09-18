@@ -1,3 +1,8 @@
+import { acceptShopperListInviteController } from '@/http/controllers/shopper-members/accept-shopper-list-invite.controller.js'
+import { createShopperListInviteController } from '@/http/controllers/shopper-members/create-shopper-list-invite.controller.js'
+import { declineShopperListInviteController } from '@/http/controllers/shopper-members/decline-shopper-list-invite.controller.js'
+import { findAllShopperListMemberController } from '@/http/controllers/shopper-members/find-all-shopper-list-member.controller.js'
+import { removeShopperListMemberController } from '@/http/controllers/shopper-members/remove-shopper-list-member.controller.js';
 import { addItemShopperListController } from '@/http/controllers/shoppers/add-item-shopper-list.controller.js'
 import { createShopperListController } from '@/http/controllers/shoppers/create-shopper-list.controller.js'
 import { deleteShopperListController } from '@/http/controllers/shoppers/delete-shopper-list.controller.js'
@@ -9,6 +14,20 @@ import { toggleClosedShopperListController } from '@/http/controllers/shoppers/t
 import { togglePurchasedShopperItemController } from '@/http/controllers/shoppers/toggle-purchased-shopper-item.controller.js'
 import { updateShopperItemQuantityController } from '@/http/controllers/shoppers/update-shopper-item-quantity.controller.js'
 import { withAuth } from '@/http/schemas/auth/with-auth.schema.js'
+import {
+  acceptShopperListInviteParamsSchema,
+  acceptShopperListInviteResponseSchema
+} from '@/http/schemas/shopper-members/accept-shopper-list-invite.schema.js'
+import {
+  createShopperListInviteParamsSchema,
+  createShopperListInviteResponseSchema
+} from '@/http/schemas/shopper-members/create-shopper-list-invite.schema.js'
+import {
+  declineShopperListInviteParamsSchema,
+  declineShopperListInviteResponseSchema
+} from '@/http/schemas/shopper-members/decline-shopper-list-invite.schema.js'
+import { findAllShopperListMemberResponseSchema } from '@/http/schemas/shopper-members/find-all-shopper-list-member.schema.js'
+import { removeShopperListMemberParamsSchema, removeShopperListMemberResponseSchema } from '@/http/schemas/shopper-members/remove-shopper-list-member.schema.js';
 import {
   addItemShopperListBodySchema,
   addItemShopperListParamsSchema,
@@ -194,5 +213,74 @@ export async function verifiedShopperRoutes(app: FastifyInstance) {
       })
     },
     removeItemShopperListController
+  )
+
+  app.post(
+    '/shoppers/:shopperListId/members/:memberId/invite',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Member'],
+        summary: 'Create shopper list invite',
+        description: 'Create shopper list invite.',
+        params: createShopperListInviteParamsSchema,
+        response: createShopperListInviteResponseSchema
+      })
+    },
+    createShopperListInviteController
+  )
+
+  app.patch(
+    '/shoppers/:shopperListId/members/:memberId/accept',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Member'],
+        summary: 'Accept shopper list invite',
+        description: 'Accept shopper list invite.',
+        params: acceptShopperListInviteParamsSchema,
+        response: acceptShopperListInviteResponseSchema
+      })
+    },
+    acceptShopperListInviteController
+  )
+
+  app.delete(
+    '/shoppers/:shopperListId/members/:memberId/decline',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Member'],
+        summary: 'Decline shopper list invite',
+        description: 'Decline shopper list invite.',
+        params: declineShopperListInviteParamsSchema,
+        response: declineShopperListInviteResponseSchema
+      })
+    },
+    declineShopperListInviteController
+  )
+
+  app.get(
+    '/shoppers/:shopperListId/members',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Member'],
+        summary: 'Find all shopper list members',
+        description: 'Find all shopper list members.',
+        response: findAllShopperListMemberResponseSchema
+      })
+    },
+    findAllShopperListMemberController
+  )
+
+  app.delete(
+    '/shoppers/:shopperListId/members/:memberId/remove',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Member'],
+        summary: 'Remove shopper list member',
+        description: 'Remove shopper list member.',
+        params: removeShopperListMemberParamsSchema,
+        response: removeShopperListMemberResponseSchema
+      })
+    },
+    removeShopperListMemberController
   )
 }
