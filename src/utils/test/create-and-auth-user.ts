@@ -1,7 +1,7 @@
 import { API_URL_V1_BASE } from '@/config/env.js'
 import { User } from '@/domain/user.entity.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { FastifyInstance } from 'fastify'
 import request from 'supertest'
 
@@ -44,12 +44,14 @@ export async function createAndAuthUser({
 
   const userCreated: User = responseUser.body.user
 
-  const userFounded = await inMemoryUserRepository.findById(userCreated.id)
+  const userRepository = new PrismaUserRepository()
+
+  const userFounded = await userRepository.findById(userCreated.id)
   if (!userFounded) {
     throw new ResourceNotFoundError()
   }
 
-  await inMemoryUserRepository.update({
+  await userRepository.update({
     ...userFounded,
     verifiedAt: isVerified ? new Date() : null
   })

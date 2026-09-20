@@ -1,11 +1,9 @@
 import { app } from '@/app.js'
 import { API_URL_V1_BASE } from '@/config/env.js'
-import { inMemoryCodeRepository } from '@/repositories/code-in-memory.repository.js'
-import { inMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
-import { inMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
-import { inMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaCodeRepository } from '@/repositories/code-prisma.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { createAndAuthUser } from '@/utils/test/create-and-auth-user.js'
+import { resetDb } from '@/utils/test/reset-db.js'
 import request from 'supertest'
 
 describe('Reset Password Controller (e2e)', () => {
@@ -14,15 +12,11 @@ describe('Reset Password Controller (e2e)', () => {
   })
 
   afterEach(async () => {
-    await inMemoryShopperListMemberRepository.deleteAll()
-    await inMemoryShopperItemRepository.deleteAll()
-    await inMemoryShopperListRepository.deleteAll()
-    await inMemoryCodeRepository.deleteAll()
-    await inMemoryUserRepository.deleteAll()
+    await resetDb()
   })
 
-  afterAll(() => {
-    app.close()
+  afterAll(async () => {
+    await app.close()
   })
 
   it('should be able to reset password', async () => {
@@ -32,7 +26,10 @@ describe('Reset Password Controller (e2e)', () => {
       .post(`${API_URL_V1_BASE}/password/forgot`)
       .send({ email: user.email })
 
-    const [code] = await inMemoryCodeRepository.findAllActiveByEntityId(
+    const userRepository = new PrismaUserRepository()
+    const codeRepository = new PrismaCodeRepository()
+
+    const [code] = await codeRepository.findAllActiveByEntityId(
       user.id,
       'password_reset'
     )
@@ -43,7 +40,7 @@ describe('Reset Password Controller (e2e)', () => {
 
     expect(response.statusCode).toEqual(204)
 
-    const userUpdated = await inMemoryUserRepository.findByEmail(user.email)
+    const userUpdated = await userRepository.findByEmail(user.email)
 
     expect(user.passwordHash).not.toEqual(userUpdated?.passwordHash)
   })

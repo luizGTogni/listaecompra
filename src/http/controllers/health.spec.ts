@@ -7,8 +7,8 @@ describe('Health Controller (e2e)', () => {
     await app.ready()
   })
 
-  afterAll(() => {
-    app.close()
+  afterAll(async () => {
+    await app.close()
   })
 
   it('should be able to show health status server', async () => {

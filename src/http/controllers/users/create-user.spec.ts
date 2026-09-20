@@ -1,11 +1,7 @@
-import { app } from '@/app.js';
-import { API_URL_V1_BASE } from '@/config/env.js';
-import { inMemoryCodeRepository } from '@/repositories/code-in-memory.repository.js';
-import { inMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js';
-import { inMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js';
-import { inMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js';
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js';
-import request from 'supertest';
+import { app } from '@/app.js'
+import { API_URL_V1_BASE } from '@/config/env.js'
+import { resetDb } from '@/utils/test/reset-db.js'
+import request from 'supertest'
 
 describe('Create User Controller (e2e)', () => {
   beforeAll(async () => {
@@ -13,15 +9,11 @@ describe('Create User Controller (e2e)', () => {
   })
 
   afterEach(async () => {
-    await inMemoryShopperListMemberRepository.deleteAll()
-    await inMemoryShopperItemRepository.deleteAll()
-    await inMemoryShopperListRepository.deleteAll()
-    await inMemoryCodeRepository.deleteAll()
-    await inMemoryUserRepository.deleteAll()
+    await resetDb()
   })
 
-  afterAll(() => {
-    app.close()
+  afterAll(async () => {
+    await app.close()
   })
 
   it('should be able to create a user', async () => {

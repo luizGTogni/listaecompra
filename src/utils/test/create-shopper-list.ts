@@ -1,6 +1,6 @@
 import { API_URL_V1_BASE } from '@/config/env.js'
 import { ShopperList } from '@/domain/shopper-list.entity.js'
-import { inMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
+import { PrismaShopperListRepository } from '@/repositories/shopper-list-prisma.repository.js'
 import { FastifyInstance } from 'fastify'
 import request from 'supertest'
 
@@ -35,9 +35,11 @@ export async function createShopperList({
       description: shopperList.description
     })
 
-  const shopperListUpdated = await inMemoryShopperListRepository.update({
+  const shopperListRepository = new PrismaShopperListRepository()
+
+  const shopperListUpdated = await shopperListRepository.update({
     ...response.body.shopperList,
-    closedAt: isClosed
+    closedAt: isClosed ? new Date() : null
   })
 
   return { shopperList: shopperListUpdated }
