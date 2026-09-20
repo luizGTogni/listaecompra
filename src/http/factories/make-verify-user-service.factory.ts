@@ -1,14 +1,12 @@
-import { inMemoryCodeRepository } from '@/repositories/code-in-memory.repository.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaCodeRepository } from '@/repositories/code-prisma.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
 import { VerifyUserService } from '@/services/users/verify-user.service.js'
 
 export function makeVerifyUserService() {
-  const getUserFound = new GetUserFoundService(inMemoryUserRepository)
+  const userRepository = new PrismaUserRepository()
+  const codeRepository = new PrismaCodeRepository()
+  const getUserFound = new GetUserFoundService(userRepository)
 
-  return new VerifyUserService(
-    getUserFound,
-    inMemoryUserRepository,
-    inMemoryCodeRepository
-  )
+  return new VerifyUserService(getUserFound, userRepository, codeRepository)
 }

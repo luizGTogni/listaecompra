@@ -1,5 +1,5 @@
 import { JwtTokenDriver } from '@/drivers/auth/jwt-token.driver.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { FastifyInstance } from 'fastify'
 import { makeAuthenticate } from '../middlewares/authenticate.middleware.js'
 import { makeRequireVerified } from '../middlewares/require-verified.middleware.js'
@@ -10,7 +10,7 @@ import { publicRoutes } from './publics/index.js'
 const tokenDriver = new JwtTokenDriver()
 const authenticate = makeAuthenticate(tokenDriver)
 
-const requireVerified = makeRequireVerified(inMemoryUserRepository)
+const requireVerified = makeRequireVerified(new PrismaUserRepository())
 
 export async function appRoutes(app: FastifyInstance) {
   app.register(publicRoutes)
