@@ -10,6 +10,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: teste1234
+          POSTGRES_DB: taskflowdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,15 +41,37 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Prisma generate
+        run: pnpm exec prisma generate
+        env:
+          DATABASE_URL: postgresql://admin:teste1234@localhost:5432/taskflowdb?schema=public
+
       - name: Lint
         run: pnpm lint
 
-      - name: Test
+      - name: Test (Unit)
         run: pnpm test
         env:
           JWT_SECRET: test-secret-for-ci
           RESEND_API_KEY: test-key-for-ci
           NODE_ENV: test
+          DATABASE_PORT: 5432
+          DATABASE_USER: admin
+          DATABASE_PASSWORD: teste1234
+          DATABASE_DB: taskflowdb
+          DATABASE_URL: postgresql://admin:teste1234@localhost:5432/taskflowdb?schema=public
+
+      - name: Test (E2E)
+        run: pnpm test:e2e
+        env:
+          JWT_SECRET: test-secret-for-ci
+          RESEND_API_KEY: test-key-for-ci
+          NODE_ENV: test
+          DATABASE_PORT: 5432
+          DATABASE_USER: admin
+          DATABASE_PASSWORD: teste1234
+          DATABASE_DB: taskflowdb
+          DATABASE_URL: postgresql://admin:teste1234@localhost:5432/taskflowdb?schema=public
 
       - name: Build
         run: pnpm build
