@@ -15,17 +15,17 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: [
-            'src/services/**/*.spec.ts',
-            'src/drivers/**/*.spec.ts'
-          ]
+          include: ['src/services/**/*.spec.ts', 'src/drivers/**/*.spec.ts']
         }
       },
       {
         extends: true,
         test: {
           name: 'e2e',
-          dir: 'src/http/controllers'
+          dir: 'src/http/controllers',
+          environment:
+            './prisma/test-environment-prisma/prisma-test-environment.ts',
+          globalSetup: ['./prisma/test-environment-prisma/global-setup.ts']
         }
       }
     ]
