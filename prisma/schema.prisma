@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  username     String    @unique
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  verifiedAt   DateTime? @map("verified_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  codes              Code[]
+  shopperLists       ShopperList[]
+  shopperListMembers ShopperListMember[]
+
+  @@map("users")
+}
+
+enum CodeType {
+  user_verification
+  password_reset
+}
+
+model Code {
+  id        String   @id @default(uuid()) @db.Uuid
+  value     String
+  codeType  CodeType @map("code_type")
+  isValid   Boolean  @default(true) @map("is_valid")
+  expiredAt DateTime @map("expired_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  entityId String @map("entity_id") @db.Uuid
+  entity   User   @relation(fields: [entityId], references: [id])
+
+  @@map("codes")
+}
+
+model ShopperList {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  description String    @default("")
+  closedAt    DateTime? @map("closed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  shopperItems       ShopperItem[]
+  shopperListMembers ShopperListMember[]
+
+  @@map("shopper_lists")
+}
+
+model ShopperItem {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String
+  description String    @default("")
+  quantity    Int       @default(1)
+  purchasedAt DateTime? @map("purchased_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  shopperListId String      @map("shopper_list_id") @db.Uuid
+  shopperList   ShopperList @relation(fields: [shopperListId], references: [id])
+
+  @@map("shopper_items")
+}
+
+model ShopperListMember {
+  id         String    @id @default(uuid()) @db.Uuid
+  invitedAt  DateTime  @default(now()) @map("invited_at")
+  acceptedAt DateTime? @map("accepted_at")
+
+  memberId String @map("member_id") @db.Uuid
+  user     User   @relation(fields: [memberId], references: [id])
+
+  shopperListId String      @map("shopper_list_id") @db.Uuid
+  shopperList   ShopperList @relation(fields: [shopperListId], references: [id])
+
+  @@unique([shopperListId, memberId])
+  @@map("shopper_list_members")
+}
