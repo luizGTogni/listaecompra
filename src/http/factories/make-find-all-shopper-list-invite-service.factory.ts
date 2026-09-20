@@ -1,13 +1,16 @@
-import { inMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaShopperListMemberRepository } from '@/repositories/shopper-list-member-prisma.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { FindAllShopperListInviteService } from '@/services/shopper-member/find-all-shopper-list-invite.service.js'
 import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
 
 export function makeFindAllShopperListInviteService() {
-  const getUserFound = new GetUserFoundService(inMemoryUserRepository)
+  const userRepository = new PrismaUserRepository()
+  const getUserFound = new GetUserFoundService(userRepository)
+
+  const shopperListMemberRepository = new PrismaShopperListMemberRepository()
 
   return new FindAllShopperListInviteService(
     getUserFound,
-    inMemoryShopperListMemberRepository
+    shopperListMemberRepository
   )
 }

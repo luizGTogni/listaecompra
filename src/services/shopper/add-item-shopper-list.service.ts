@@ -53,7 +53,12 @@ export class AddItemShopperListService {
       throw new InvalidItemQuantityError()
     }
 
-    const shopperItem = await this.shopperItemRepository.create(data)
+    const shopperItem = await this.shopperItemRepository.create({
+      shopperListId: data.shopperListId,
+      title: data.title,
+      description: data.description,
+      quantity: data.quantity
+    })
 
     return { shopperItem }
   }

@@ -1,14 +1,12 @@
 import { RandomCodeGenerateDriver } from '@/drivers/code/random-code-generate.driver.js'
-import { inMemoryCodeRepository } from '@/repositories/code-in-memory.repository.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaCodeRepository } from '@/repositories/code-prisma.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { CreateCodeService } from '@/services/token/create-code.service.js'
 
 export function makeCreateCodeService() {
+  const userRepository = new PrismaUserRepository()
+  const codeRepository = new PrismaCodeRepository()
   const codeGenerate = new RandomCodeGenerateDriver()
 
-  return new CreateCodeService(
-    inMemoryUserRepository,
-    inMemoryCodeRepository,
-    codeGenerate
-  )
+  return new CreateCodeService(userRepository, codeRepository, codeGenerate)
 }

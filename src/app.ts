@@ -13,6 +13,7 @@ import {
 import { ZodError } from 'zod'
 import { API_URL_V1_BASE, env } from './config/env.js'
 import { logger } from './config/logger.js'
+import { prisma } from './config/prisma.js'
 import { appRoutes } from './http/routes/index.js'
 import { HttpError } from './http/types/errors/http-error.js'
 
@@ -22,6 +23,10 @@ export const app = Fastify({
 
 app.setValidatorCompiler(validatorCompiler)
 app.setSerializerCompiler(serializerCompiler)
+
+app.addHook('onClose', async () => {
+  await prisma.$disconnect()
+})
 
 app.register(cors, {
   origin: (origin, cb) => {

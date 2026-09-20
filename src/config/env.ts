@@ -9,7 +9,12 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   JWT_SECRET: z.string(),
   RESEND_API_KEY: z.string(),
-  MAIL_FROM: z.string().default('Lista&Compra <onboarding@resend.dev>')
+  MAIL_FROM: z.string().default('Lista&Compra <onboarding@resend.dev>'),
+  DATABASE_URL: z.string(),
+  DATABASE_USER: z.string(),
+  DATABASE_PASSWORD: z.string(),
+  DATABASE_DB: z.string(),
+  DATABASE_PORT: z.coerce.number().default(5432)
 })
 
 const _env = envSchema.safeParse(process.env)

@@ -1,15 +1,12 @@
 import { BcryptPasswordHashDriver } from '@/drivers/password/bcrypt-password-hash.driver.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { ChangePasswordService } from '@/services/users/change-password.service.js'
 import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
 
 export function makeChangePasswordService() {
+  const userRepository = new PrismaUserRepository()
   const passwordHasher = new BcryptPasswordHashDriver()
-  const getUserFound = new GetUserFoundService(inMemoryUserRepository)
+  const getUserFound = new GetUserFoundService(userRepository)
 
-  return new ChangePasswordService(
-    getUserFound,
-    inMemoryUserRepository,
-    passwordHasher
-  )
+  return new ChangePasswordService(getUserFound, userRepository, passwordHasher)
 }

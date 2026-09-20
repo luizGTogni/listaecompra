@@ -1,12 +1,10 @@
 import { app } from '@/app.js'
+
 import { API_URL_V1_BASE } from '@/config/env.js'
-import { inMemoryCodeRepository } from '@/repositories/code-in-memory.repository.js'
-import { inMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
-import { inMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
-import { inMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
-import { inMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
+import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { createAndAuthUser } from '@/utils/test/create-and-auth-user.js'
 import { createShopperList } from '@/utils/test/create-shopper-list.js'
+import { resetDb } from '@/utils/test/reset-db.js'
 import request from 'supertest'
 
 describe('Find All Shopper List Member Controller (e2e)', () => {
@@ -15,15 +13,11 @@ describe('Find All Shopper List Member Controller (e2e)', () => {
   })
 
   afterEach(async () => {
-    await inMemoryShopperListMemberRepository.deleteAll()
-    await inMemoryShopperItemRepository.deleteAll()
-    await inMemoryShopperListRepository.deleteAll()
-    await inMemoryCodeRepository.deleteAll()
-    await inMemoryUserRepository.deleteAll()
+    await resetDb()
   })
 
-  afterAll(() => {
-    app.close()
+  afterAll(async () => {
+    await app.close()
   })
 
   it('should be able to find all a shopper list members if owner', async () => {
@@ -159,7 +153,9 @@ describe('Find All Shopper List Member Controller (e2e)', () => {
     const { token, user } = await createAndAuthUser({ app })
     const { shopperList } = await createShopperList({ app, token })
 
-    await inMemoryUserRepository.update({
+    const userRepository = new PrismaUserRepository()
+
+    await userRepository.update({
       ...user,
       verifiedAt: null
     })

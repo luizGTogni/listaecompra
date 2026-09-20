@@ -1,4 +1,4 @@
-import { makeTogglePurchasedShopperItemService } from '@/http/factories/make-toggle-purchased-shopper-item-service.factory copy.js'
+import { makeTogglePurchasedShopperItemService } from '@/http/factories/make-toggle-purchased-shopper-item-service.factory.js'
 import { userAuthSchema } from '@/http/schemas/auth/user-auth.schema.js'
 import { togglePurchasedShopperItemParamsSchema } from '@/http/schemas/shoppers/toggle-purchased-shopper-item.schema.js'
 import { FastifyReply, FastifyRequest } from 'fastify'
