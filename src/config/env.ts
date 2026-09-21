@@ -14,7 +14,8 @@ const envSchema = z.object({
   DATABASE_USER: z.string(),
   DATABASE_PASSWORD: z.string(),
   DATABASE_DB: z.string(),
-  DATABASE_PORT: z.coerce.number().default(5432)
+  DATABASE_PORT: z.coerce.number().default(5432),
+  FRONTEND_URL: z.string().default('http://localhost:3001')
 })
 
 const _env = envSchema.safeParse(process.env)

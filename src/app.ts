@@ -1,3 +1,4 @@
+import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
@@ -37,16 +38,18 @@ app.register(cors, {
       return
     }
 
-    const hostname = new URL(origin).hostname
-
-    if (hostname === 'localhost') {
+    if (origin === env.FRONTEND_URL) {
       cb(null, true)
       return
     }
 
-    cb(new Error('Not Allowed'), false)
-  }
+    cb(null, false)
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true
 })
+
+app.register(cookie)
 
 app.register(helmet, {
   contentSecurityPolicy: false
@@ -70,6 +73,11 @@ app.register(swagger, {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT'
+        },
+        cookieAuth: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'token'
         }
       }
     }

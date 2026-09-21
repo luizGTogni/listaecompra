@@ -10,10 +10,12 @@ import {
 } from '@/http/schemas/users/reset-password.schema.js'
 import { FastifyInstance } from 'fastify'
 import { authController } from '../../controllers/users/auth.controller.js'
+import { logoutController } from '../../controllers/users/logout.controller.js'
 import { createUserController } from '../../controllers/users/create-user.controller.js'
 import {
   authBodySchema,
-  authResponseSchema
+  authResponseSchema,
+  logoutResponseSchema
 } from '../../schemas/users/auth.schema.js'
 import {
   createUserBodySchema,
@@ -76,5 +78,18 @@ export async function publicUsersRoutes(app: FastifyInstance) {
       }
     },
     authController
+  )
+
+  app.post(
+    '/session/logout',
+    {
+      schema: {
+        tags: ['Users', 'Auth'],
+        summary: 'Logout user',
+        description: 'Clears the session cookie.',
+        response: logoutResponseSchema
+      }
+    },
+    logoutController
   )
 }
