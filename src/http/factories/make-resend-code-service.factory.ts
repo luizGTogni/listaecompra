@@ -22,7 +22,7 @@ export function makeResendCodeService() {
   const sendEmailService = new SendEmailService(makeEmailDriver())
   return new ResendCodeService(
     getUserFound,
-    userRepository,
+    codeRepository,
     createCodeService,
     sendEmailService
   )

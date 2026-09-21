@@ -88,13 +88,37 @@ app.setErrorHandler((error: Error | ZodError | HttpError, request, reply) => {
 
   if (error instanceof ZodError) {
     return reply.status(400).send({
-      name: error.name,
-      message: error.message,
-      issues: error.issues
+      name: 'ValidationError',
+      message: 'Invalid data.',
+      fields: error.issues.map((issue) => {
+        return {
+          field: issue.path.join('.'),
+          code: issue.code,
+          message: issue.message
+        }
+      })
+    })
+  }
+
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    return reply.status(400).send({
+      name: 'ValidationError',
+      message: 'Invalid data.',
+      fields: error.validation.map((issue) => {
+        return {
+          field: issue.instancePath.replace(/^\//, '').replaceAll('/', '.'),
+          code: issue.keyword,
+          message: issue.message
+        }
+      })
     })
   }
 
   if (error instanceof HttpError) {
+    if (error instanceof TooManyRequestsError) {
+      reply.header('Retry-After', error.retryAfterSeconds)
+    }
+
     return reply.status(error.statusCode).send({
       name: error.name,
       message: error.message
