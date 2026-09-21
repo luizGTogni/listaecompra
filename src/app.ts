@@ -5,6 +5,7 @@ import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import Fastify from 'fastify'
 import {
+  hasZodFastifySchemaValidationErrors,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
@@ -16,6 +17,7 @@ import { logger } from './config/logger.js'
 import { prisma } from './config/prisma.js'
 import { appRoutes } from './http/routes/index.js'
 import { HttpError } from './http/types/errors/http-error.js'
+import { TooManyRequestsError } from './http/types/errors/too-many-requests.error.js'
 
 export const app = Fastify({
   logger: env.NODE_ENV === 'dev' ? true : false
@@ -88,13 +90,37 @@ app.setErrorHandler((error: Error | ZodError | HttpError, request, reply) => {
 
   if (error instanceof ZodError) {
     return reply.status(400).send({
-      name: error.name,
-      message: error.message,
-      issues: error.issues
+      name: 'ValidationError',
+      message: 'Invalid data.',
+      fields: error.issues.map((issue) => {
+        return {
+          field: issue.path.join('.'),
+          code: issue.code,
+          message: issue.message
+        }
+      })
+    })
+  }
+
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    return reply.status(400).send({
+      name: 'ValidationError',
+      message: 'Invalid data.',
+      fields: error.validation.map((issue) => {
+        return {
+          field: issue.instancePath.replace(/^\//, '').replaceAll('/', '.'),
+          code: issue.keyword,
+          message: issue.message
+        }
+      })
     })
   }
 
   if (error instanceof HttpError) {
+    if (error instanceof TooManyRequestsError) {
+      reply.header('Retry-After', error.retryAfterSeconds)
+    }
+
     return reply.status(error.statusCode).send({
       name: error.name,
       message: error.message

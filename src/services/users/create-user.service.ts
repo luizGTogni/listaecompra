@@ -1,6 +1,7 @@
 import { User } from '@/domain/user.entity.js'
 import { PasswordHashDriver } from '@/drivers/password/password-hash.driver.js'
-import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
+import { EmailAlreadyExistsError } from '@/http/types/errors/email-already-exists.error.js'
+import { UsernameAlreadyExistsError } from '@/http/types/errors/username-already-exists.error.js'
 import { UserRepository } from '@/repositories/user.repository.js'
 import { SendEmailService } from '../email/send-email.service.js'
 import { verificationCodeTemplate } from '../email/templates/verification-code.template.js'
@@ -34,13 +35,13 @@ export class CreateUserService {
     let userAlreadyExists = await this.userRepository.findByEmail(email)
 
     if (userAlreadyExists) {
-      throw new ResourceAlreadyExistsError()
+      throw new EmailAlreadyExistsError()
     }
 
     userAlreadyExists = await this.userRepository.findByUsername(username)
 
     if (userAlreadyExists) {
-      throw new ResourceAlreadyExistsError()
+      throw new UsernameAlreadyExistsError()
     }
 
     const passwordHash = await this.passwordHasher.hash(passwordPlain)

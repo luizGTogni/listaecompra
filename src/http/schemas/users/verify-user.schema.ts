@@ -12,5 +12,5 @@ export const verifyUserResponseSchema = {
 }
 
 export const verifyUserBodySchema = z.object({
-  codeValue: z.string()
+  codeValue: z.string().trim().toUpperCase()
 })

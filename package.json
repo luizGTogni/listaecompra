@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "tsx watch src/server.ts",
-    "start": "node dist/server.cjs",
-    "build": "tsup src/",
+    "start": "node dist/server.js",
+    "build": "tsup",
     "test": "vitest run --project unit",
     "test:e2e": "vitest run --project e2e",
     "test:watch": "vitest --project unit",

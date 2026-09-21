@@ -1,6 +1,8 @@
+import { findOneUserController } from '@/http/controllers/users/find-one-user.controller.js'
 import { resendCodeController } from '@/http/controllers/users/resend-code.controller.js'
 import { verifyUserController } from '@/http/controllers/users/verify-user.controller.js'
 import { withAuth } from '@/http/schemas/auth/with-auth.schema.js'
+import { findOneUserResponseSchema } from '@/http/schemas/users/find-one-user.schema.js'
 import { resendCodeResponseSchema } from '@/http/schemas/users/resend-code.schema.js'
 import {
   verifyUserBodySchema,
@@ -21,6 +23,19 @@ export async function authRoutes(app: FastifyInstance) {
       })
     },
     verifyUserController
+  )
+
+  app.get(
+    '/users/me',
+    {
+      schema: withAuth({
+        tags: ['Users'],
+        summary: 'Find one user data',
+        description: 'Find one user data.',
+        response: findOneUserResponseSchema
+      })
+    },
+    findOneUserController
   )
 
   app.post(

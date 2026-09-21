@@ -4,7 +4,7 @@ export class CodeExpiredError extends HttpError {
   constructor() {
     super({
       name: 'CodeExpired',
-      statusCode: 401,
+      statusCode: 422,
       message: 'Code expired.'
     })
   }
