@@ -5,6 +5,7 @@ import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import Fastify from 'fastify'
 import {
+  hasZodFastifySchemaValidationErrors,
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
@@ -16,6 +17,7 @@ import { logger } from './config/logger.js'
 import { prisma } from './config/prisma.js'
 import { appRoutes } from './http/routes/index.js'
 import { HttpError } from './http/types/errors/http-error.js'
+import { TooManyRequestsError } from './http/types/errors/too-many-requests.error.js'
 
 export const app = Fastify({
   logger: env.NODE_ENV === 'dev' ? true : false

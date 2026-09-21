@@ -19,16 +19,17 @@ export const createUserResponseSchema = {
 }
 
 export const createUserBodySchema = z.object({
-  name: z.string(),
+  name: z.string().trim().min(1, 'Name is required.'),
   username: z
-    .string()
-    .min(3, 'The username must be at least 3 characters long.')
-    .max(20, 'The username must have a maximum of 20 characters.')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Username contains invalid characters'),
-  email: z.email(),
-  password: z
     .string()
     .trim()
     .min(3, 'The username must be at least 3 characters long.')
-    .max(64, 'The username must have a maximum of 64 characters.')
+    .max(20, 'The username must have a maximum of 20 characters.')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username contains invalid characters'),
+  email: z.email('Invalid email address.'),
+  password: z
+    .string()
+    .trim()
+    .min(3, 'The password must be at least 3 characters long.')
+    .max(64, 'The password must have a maximum of 64 characters.')
 })
