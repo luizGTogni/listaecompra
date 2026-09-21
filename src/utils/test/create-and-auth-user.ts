@@ -42,6 +42,9 @@ export async function createAndAuthUser({
       password: user.password
     })
 
+  const [setCookie] = responseAuth.headers['set-cookie']
+  const token = setCookie.split(';')[0].split('=')[1]
+
   const userCreated: User = responseUser.body.user
 
   const userRepository = new PrismaUserRepository()
@@ -56,5 +59,5 @@ export async function createAndAuthUser({
     verifiedAt: isVerified ? new Date() : null
   })
 
-  return { token: responseAuth.body.token, user: responseUser.body.user }
+  return { token, user: responseUser.body.user }
 }
