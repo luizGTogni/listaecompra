@@ -2,7 +2,7 @@ import { acceptShopperListInviteController } from '@/http/controllers/shopper-me
 import { createShopperListInviteController } from '@/http/controllers/shopper-members/create-shopper-list-invite.controller.js'
 import { declineShopperListInviteController } from '@/http/controllers/shopper-members/decline-shopper-list-invite.controller.js'
 import { findAllShopperListMemberController } from '@/http/controllers/shopper-members/find-all-shopper-list-member.controller.js'
-import { removeShopperListMemberController } from '@/http/controllers/shopper-members/remove-shopper-list-member.controller.js';
+import { removeShopperListMemberController } from '@/http/controllers/shopper-members/remove-shopper-list-member.controller.js'
 import { addItemShopperListController } from '@/http/controllers/shoppers/add-item-shopper-list.controller.js'
 import { createShopperListController } from '@/http/controllers/shoppers/create-shopper-list.controller.js'
 import { deleteShopperListController } from '@/http/controllers/shoppers/delete-shopper-list.controller.js'
@@ -27,7 +27,10 @@ import {
   declineShopperListInviteResponseSchema
 } from '@/http/schemas/shopper-members/decline-shopper-list-invite.schema.js'
 import { findAllShopperListMemberResponseSchema } from '@/http/schemas/shopper-members/find-all-shopper-list-member.schema.js'
-import { removeShopperListMemberParamsSchema, removeShopperListMemberResponseSchema } from '@/http/schemas/shopper-members/remove-shopper-list-member.schema.js';
+import {
+  removeShopperListMemberParamsSchema,
+  removeShopperListMemberResponseSchema
+} from '@/http/schemas/shopper-members/remove-shopper-list-member.schema.js'
 import {
   addItemShopperListBodySchema,
   addItemShopperListParamsSchema,
