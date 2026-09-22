@@ -70,7 +70,7 @@ describe('Verify User Service', () => {
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
 
-  it('should not be able to verify user if code not found', async () => {
+  it('should not be able to verify user already verified', async () => {
     const dataExpected = {
       name: 'John Doe',
       username: 'JohnDoe',
@@ -113,7 +113,7 @@ describe('Verify User Service', () => {
         userId: user.id,
         codeValue: 'CODENOTFOUND'
       })
-    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    ).rejects.toBeInstanceOf(CodeInvalidError)
   })
 
   it('should not be able to verify user if code not found', async () => {
