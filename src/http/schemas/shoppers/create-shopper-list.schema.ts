@@ -20,6 +20,6 @@ export const createShopperListResponseSchema = {
 }
 
 export const createShopperListBodySchema = z.object({
-  title: z.string(),
-  description: z.string().default('')
+  title: z.string().trim().min(1).max(60),
+  description: z.string().trim().max(200).default('')
 })
