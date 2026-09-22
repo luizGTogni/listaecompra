@@ -38,7 +38,6 @@
 [x] RN12 - Apenas o dono da lista pode compartilhar, editar o nome ou excluir a lista.
 [x] RN13 - Um usuário convidado (lista compartilhada) pode adicionar/remover produtos, mas não excluir a lista.
 [x] RN14 - Um produto marcado como "comprado" não pode ter a quantidade editada, apenas removido.
-[x] RN15 - O sistema não deve permitir login antes da verificação de e-mail (reforça o RN02).
 [x] RN16 - O token de recuperação de senha deve expirar após um período determinado (ex: 30 minutos).
 
 ## Requisitos Não Funcionais (RNF)

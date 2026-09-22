@@ -6,7 +6,6 @@ import {
 } from './shopper-list.repository.js'
 
 export class InMemoryShopperListRepository implements ShopperListRepository {
-  private ITEMS_PER_PAGE = 10
   private items: ShopperList[] = []
 
   async create(data: ShopperListInput) {
@@ -67,18 +66,32 @@ export class InMemoryShopperListRepository implements ShopperListRepository {
   }
 
   async findAllByUserId(userId: string, filters: FilterParams) {
-    const START_INDEX = (filters.page - 1) * this.ITEMS_PER_PAGE
-    const END_INDEX = this.ITEMS_PER_PAGE * filters.page
+    const START_INDEX = (filters.page - 1) * filters.limit
+    const END_INDEX = filters.limit * filters.page
 
-    const shopperLists = this.items
-      .filter(
-        (item) =>
-          item.userId === userId &&
-          item.title.toLowerCase().includes(filters.query.toLowerCase())
+    let filtered = this.items
+
+    if (filters.status) {
+      filtered = filtered.filter((item) =>
+        filters.status === 'open' ? !item.closedAt : item.closedAt
       )
-      .slice(START_INDEX, END_INDEX)
+    }
 
-    return shopperLists.map((item) => ({ ...item }))
+    filtered = filtered.filter(
+      (item) =>
+        item.userId === userId &&
+        (item.title.toLowerCase().includes(filters.query.toLowerCase()) ||
+          item.description.toLowerCase().includes(filters.query.toLowerCase()))
+    )
+
+    const shopperLists = filtered.slice(START_INDEX, END_INDEX)
+
+    return {
+      shopperLists: shopperLists.map((item) => ({ ...item })),
+      page: filters.page,
+      perPage: filters.limit,
+      total: filtered.length
+    }
   }
 }
 

@@ -5,6 +5,7 @@ import {
 import { ShopperListMemberRepository } from './shopper-list-member.repository.js'
 
 export class InMemoryShopperListMemberRepository implements ShopperListMemberRepository {
+
   private items: ShopperListMember[] = []
 
   async create(data: ShopperListMemberInput) {

@@ -2,7 +2,16 @@ import { ShopperList, ShopperListInput } from '@/domain/shopper-list.entity.js'
 
 export interface FilterParams {
   page: number
+  limit: number
   query: string
+  status?: 'open' | 'closed'
+}
+
+interface FindAllResponse {
+  shopperLists: ShopperList[]
+  page: number
+  perPage: number
+  total: number
 }
 
 export interface ShopperListRepository {
@@ -16,5 +25,8 @@ export interface ShopperListRepository {
     title: string,
     userId: string
   ): Promise<ShopperList | null>
-  findAllByUserId(userId: string, filters: FilterParams): Promise<ShopperList[]>
+  findAllByUserId(
+    userId: string,
+    filters: FilterParams
+  ): Promise<FindAllResponse>
 }

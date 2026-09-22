@@ -7,8 +7,6 @@ import {
 } from './shopper-list.repository.js'
 
 export class PrismaShopperListRepository implements ShopperListRepository {
-  private ITEMS_PER_PAGE = 10
-
   async create(data: ShopperListInput) {
     const shopperList = await prisma.shopperList.create({ data })
 
@@ -63,16 +61,77 @@ export class PrismaShopperListRepository implements ShopperListRepository {
   }
 
   async findAllByUserId(userId: string, filters: FilterParams) {
-    const shopperLists = await prisma.shopperList.findMany({
-      where: {
-        userId,
-        title: { contains: filters.query, mode: 'insensitive' }
-      },
-      orderBy: { createdAt: 'asc' },
-      take: this.ITEMS_PER_PAGE,
-      skip: (filters.page - 1) * this.ITEMS_PER_PAGE
-    })
+    const [shopperLists, total] = await prisma.$transaction([
+      prisma.shopperList.findMany({
+        where: {
+          AND: [
+            {
+              OR: [
+                { userId },
+                {
+                  shopperListMembers: {
+                    some: { memberId: userId, acceptedAt: { not: null } }
+                  }
+                }
+              ]
+            },
+            {
+              OR: [
+                { title: { contains: filters.query, mode: 'insensitive' } },
+                {
+                  description: { contains: filters.query, mode: 'insensitive' }
+                }
+              ]
+            },
+            filters.status
+              ? {
+                  closedAt:
+                    filters.status === 'open' ? { equals: null } : { not: null }
+                }
+              : {}
+          ]
+        },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: filters.limit,
+        skip: (filters.page - 1) * filters.limit
+      }),
+      prisma.shopperList.count({
+        where: {
+          AND: [
+            {
+              OR: [
+                { userId },
+                {
+                  shopperListMembers: {
+                    some: { memberId: userId, acceptedAt: { not: null } }
+                  }
+                }
+              ]
+            },
+            {
+              OR: [
+                { title: { contains: filters.query, mode: 'insensitive' } },
+                {
+                  description: { contains: filters.query, mode: 'insensitive' }
+                }
+              ]
+            },
+            filters.status
+              ? {
+                  closedAt:
+                    filters.status === 'open' ? { equals: null } : { not: null }
+                }
+              : {}
+          ]
+        }
+      })
+    ])
 
-    return shopperLists
+    return {
+      shopperLists,
+      page: filters.page,
+      perPage: filters.limit,
+      total
+    }
   }
 }

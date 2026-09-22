@@ -1,6 +1,5 @@
 import { CodeExpiredError } from '@/http/types/errors/code-expired.error.js'
 import { CodeInvalidError } from '@/http/types/errors/code-invalid.error.js'
-import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { UserAlreadyVerifiedError } from '@/http/types/errors/user-already-verified.js'
 import { CodeRepository } from '@/repositories/code.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
@@ -32,7 +31,7 @@ export class VerifyUserService {
     )
 
     if (!code) {
-      throw new ResourceNotFoundError()
+      throw new CodeInvalidError()
     }
 
     if (!code.isValid) {

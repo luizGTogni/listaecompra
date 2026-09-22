@@ -7,16 +7,20 @@ export async function findAllShopperListController(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { page, query } = findAllShopperListQuerySchema.parse(request.query)
+  const { page, limit, query, status } = findAllShopperListQuerySchema.parse(
+    request.query
+  )
   const { sub } = userAuthSchema.parse(request.user)
 
   const findAllShopperListService = makeFindAllShopperListService()
 
-  const { shopperLists } = await findAllShopperListService.execute({
+  const response = await findAllShopperListService.execute({
     userId: sub,
     page,
-    query
+    limit,
+    query,
+    status
   })
 
-  return reply.status(200).send({ shopperLists })
+  return reply.status(200).send(response)
 }

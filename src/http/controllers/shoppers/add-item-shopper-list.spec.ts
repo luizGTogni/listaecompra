@@ -165,7 +165,7 @@ describe('Add Item Shopper List Controller (e2e)', () => {
     )
   })
 
-  it('should not be able to add item in shopper list if user not auth', async () => {
+  it('should not be able to add item in shopper list if user not auth by the session cookie', async () => {
     const { token } = await createAndAuthUser({ app })
 
     const dataShopperList = {
@@ -175,7 +175,7 @@ describe('Add Item Shopper List Controller (e2e)', () => {
 
     const responseShopperList = await request(app.server)
       .post(`${API_URL_V1_BASE}/shoppers`)
-      .set('Authorization', `Bearer ${token}`)
+      .set('Cookie', `token=${token}`)
       .send({
         title: dataShopperList.title,
         description: dataShopperList.description
