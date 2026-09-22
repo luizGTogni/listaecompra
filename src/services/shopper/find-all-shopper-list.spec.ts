@@ -45,6 +45,7 @@ describe('Find All Shopper List', () => {
     const { shopperLists } = await sut.execute({
       userId: user.id,
       page: 1,
+      limit: 10,
       query: ''
     })
 
@@ -70,6 +71,7 @@ describe('Find All Shopper List', () => {
     const { shopperLists } = await sut.execute({
       userId: user.id,
       page: 1,
+      limit: 10,
       query: 'TestShopperList-1'
     })
 
@@ -89,6 +91,7 @@ describe('Find All Shopper List', () => {
     const { shopperLists } = await sut.execute({
       userId: user.id,
       page: 2,
+      limit: 10,
       query: ''
     })
 
@@ -104,6 +107,7 @@ describe('Find All Shopper List', () => {
       sut.execute({
         userId: 'user-not-found',
         page: 1,
+        limit: 10,
         query: ''
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
@@ -136,6 +140,7 @@ describe('Find All Shopper List', () => {
     const { shopperLists } = await sut.execute({
       userId: member.id,
       page: 1,
+      limit: 10,
       query: ''
     })
 

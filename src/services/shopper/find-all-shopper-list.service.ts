@@ -5,11 +5,16 @@ import { GetUserFoundService } from '../users/get-user-found.service.js'
 interface FindAllShopperListRequest {
   userId: string
   page: number
+  limit: number
   query: string
+  status?: 'open' | 'closed'
 }
 
 interface FindAllShopperListResponse {
   shopperLists: ShopperList[]
+  perPage: number
+  page: number
+  total: number
 }
 
 export class FindAllShopperListService {
@@ -23,13 +28,19 @@ export class FindAllShopperListService {
   ): Promise<FindAllShopperListResponse> {
     const user = await this.getUserFound.execute({ userId: data.userId })
 
-    const shopperLists = await this.shopperListRepository.findAllByUserId(
-      user.id,
-      { page: data.page, query: data.query }
-    )
+    const { shopperLists, perPage, page, total } =
+      await this.shopperListRepository.findAllByUserId(user.id, {
+        page: data.page,
+        limit: data.limit,
+        query: data.query,
+        status: data.status
+      })
 
     return {
-      shopperLists
+      shopperLists,
+      perPage,
+      page,
+      total
     }
   }
 }
