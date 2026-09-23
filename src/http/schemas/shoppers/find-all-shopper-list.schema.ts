@@ -11,7 +11,11 @@ export const findAllShopperListResponseSchema = {
         title: z.string(),
         description: z.string(),
         closedAt: z.date().nullable(),
-        createdAt: z.date()
+        createdAt: z.date(),
+        user: z.object({
+          name: z.string(),
+          username: z.string()
+        })
       })
     ),
     perPage: z.coerce.number(),

@@ -1,3 +1,4 @@
+import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { ShopperList, ShopperListInput } from '@/domain/shopper-list.entity.js'
 
 export interface FilterParams {
@@ -7,11 +8,22 @@ export interface FilterParams {
   status?: 'open' | 'closed'
 }
 
+export type ShopperListWithUser = ShopperList & {
+  user: {
+    name: string
+    username: string
+  }
+}
+
 interface FindAllResponse {
-  shopperLists: ShopperList[]
+  shopperLists: ShopperListWithUser[]
   page: number
   perPage: number
   total: number
+}
+
+export type ShopperListWithItemsUser = ShopperListWithUser & {
+  shopperItems: ShopperItem[]
 }
 
 export interface ShopperListRepository {
@@ -20,6 +32,7 @@ export interface ShopperListRepository {
   delete(id: string): Promise<void>
   deleteAll(): Promise<void>
   findById(id: string): Promise<ShopperList | null>
+  findWithItemsAndUserById(id: string): Promise<ShopperListWithItemsUser | null>
   findByIdAndUserId(id: string, userId: string): Promise<ShopperList | null>
   findByTitleAndUserId(
     title: string,

@@ -1,5 +1,7 @@
-import { ShopperList } from '@/domain/shopper-list.entity.js'
-import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
+import {
+  ShopperListRepository,
+  ShopperListWithUser
+} from '@/repositories/shopper-list.repository.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
 
 interface FindAllShopperListRequest {
@@ -11,7 +13,7 @@ interface FindAllShopperListRequest {
 }
 
 interface FindAllShopperListResponse {
-  shopperLists: ShopperList[]
+  shopperLists: ShopperListWithUser[]
   perPage: number
   page: number
   total: number

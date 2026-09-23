@@ -22,7 +22,7 @@ let shopperList: ShopperList
 describe('Get Shopper List Access', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
-    shopperListRepository = new InMemoryShopperListRepository()
+    shopperListRepository = new InMemoryShopperListRepository(userRepository)
     shopperListMemberRepository = new InMemoryShopperListMemberRepository()
     sut = new GetShopperListAccessService(
       shopperListRepository,

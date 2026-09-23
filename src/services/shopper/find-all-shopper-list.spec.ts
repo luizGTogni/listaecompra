@@ -21,7 +21,7 @@ describe('Find All Shopper List', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
     getUserFound = new GetUserFoundService(userRepository)
-    shopperListRepository = new InMemoryShopperListRepository()
+    shopperListRepository = new InMemoryShopperListRepository(userRepository)
     shopperListMemberRepository = new InMemoryShopperListMemberRepository()
     sut = new FindAllShopperListService(getUserFound, shopperListRepository)
 
@@ -31,6 +31,28 @@ describe('Find All Shopper List', () => {
       email: 'johndoe@example.com',
       passwordHash: 'hasher-123456'
     })
+  })
+
+  it('should be able to find all shopper list with the owner data', async () => {
+    await shopperListRepository.create({
+      title: 'TestShopperList',
+      description: 'Description',
+      userId: user.id
+    })
+
+    const { shopperLists } = await sut.execute({
+      userId: user.id,
+      page: 1,
+      limit: 10,
+      query: ''
+    })
+
+    expect(shopperLists).toEqual([
+      expect.objectContaining({
+        title: 'TestShopperList',
+        user: { name: user.name, username: user.username }
+      })
+    ])
   })
 
   it('should be able to find all shopper list', async () => {

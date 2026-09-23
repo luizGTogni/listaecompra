@@ -230,10 +230,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     await request(app.server)
       .patch(
@@ -287,10 +287,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     const response = await request(app.server)
       .get(`${API_URL_V1_BASE}/shoppers`)
@@ -331,10 +331,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     await request(app.server)
       .patch(
