@@ -70,7 +70,8 @@ describe('Find One Shopper List Controller (e2e)', () => {
       description: dataShopperList.description,
       closedAt: null,
       createdAt: expect.any(String),
-      items: [
+      user: { name: user.name, username: user.username },
+      shopperItems: [
         expect.objectContaining({ title: 'ShopperItem1' }),
         expect.objectContaining({ title: 'ShopperItem2' })
       ]
@@ -103,10 +104,10 @@ describe('Find One Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     await request(app.server)
       .patch(
@@ -124,7 +125,10 @@ describe('Find One Shopper List Controller (e2e)', () => {
 
     expect(response.statusCode).toEqual(200)
     expect(response.body.shopperList).toEqual(
-      expect.objectContaining({ id: responseShopperList.body.shopperList.id })
+      expect.objectContaining({
+        id: responseShopperList.body.shopperList.id,
+        user: { name: 'John Doe', username: 'johndoe' }
+      })
     )
   })
 
@@ -154,10 +158,10 @@ describe('Find One Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     const response = await request(app.server)
       .get(

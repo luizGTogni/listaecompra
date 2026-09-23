@@ -3,7 +3,6 @@ import { API_URL_V1_BASE } from '@/config/env.js'
 import { createAndAuthUser } from '@/utils/test/create-and-auth-user.js'
 import { createShopperList } from '@/utils/test/create-shopper-list.js'
 import { resetDb } from '@/utils/test/reset-db.js'
-import { randomUUID } from 'node:crypto'
 import request from 'supertest'
 
 describe('Create Shopper List Invite Controller (e2e)', () => {
@@ -33,11 +32,9 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     const { shopperList } = await createShopperList({ app, token })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     expect(response.statusCode).toEqual(201)
     expect(response.body.shopperListMember).toEqual({
@@ -48,17 +45,15 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     })
   })
 
-  it('should not be able to create a shopper list invite if user request same memberId', async () => {
+  it('should not be able to create a shopper list invite if user request same username', async () => {
     const { token, user } = await createAndAuthUser({ app })
 
     const { shopperList } = await createShopperList({ app, token })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     expect(response.statusCode).toEqual(403)
     expect(response.body).toEqual(
@@ -79,11 +74,9 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${randomUUID()}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/shopper-list-not-found/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     expect(response.statusCode).toEqual(404)
     expect(response.body).toEqual(
@@ -116,11 +109,9 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     const { shopperList } = await createShopperList({ app, token })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${userNotOwner.token}`)
-      .send()
+      .send({ username: user.username })
 
     expect(response.statusCode).toEqual(403)
     expect(response.body).toEqual(
@@ -146,11 +137,9 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     expect(response.statusCode).toEqual(409)
     expect(response.body).toEqual(
@@ -175,18 +164,14 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     })
 
     await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     expect(response.statusCode).toEqual(409)
     expect(response.body).toEqual(
@@ -202,11 +187,9 @@ describe('Create Shopper List Invite Controller (e2e)', () => {
     })
 
     const response = await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${randomUUID()}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: 'member-not-found' })
 
     expect(response.statusCode).toEqual(404)
     expect(response.body).toEqual(

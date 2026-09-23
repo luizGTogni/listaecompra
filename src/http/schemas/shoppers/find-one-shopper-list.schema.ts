@@ -11,7 +11,11 @@ export const findOneShopperListResponseSchema = {
       description: z.string(),
       closedAt: z.date().nullable(),
       createdAt: z.date(),
-      items: z.array(
+      user: z.object({
+        name: z.string(),
+        username: z.string()
+      }),
+      shopperItems: z.array(
         z.object({
           id: z.string(),
           shopperListId: z.string(),

@@ -12,13 +12,11 @@ import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository
 import { UserRepository } from '@/repositories/user.repository.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
 import { FindOneShopperListService } from './find-one-shopper-list.service.js'
-import { GetShopperListAccessService } from './get-shopper-list-access.service.js'
 
 let userRepository: UserRepository
 let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
-let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
 let sut: FindOneShopperListService
 
@@ -31,18 +29,16 @@ describe('Find One Shopper List', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
     getUserFound = new GetUserFoundService(userRepository)
-    shopperListRepository = new InMemoryShopperListRepository()
-    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
-    getShopperListAccess = new GetShopperListAccessService(
-      shopperListRepository,
-      shopperListMemberRepository
-    )
     shopperItemRepository = new InMemoryShopperItemRepository()
+    shopperListRepository = new InMemoryShopperListRepository(
+      userRepository,
+      shopperItemRepository
+    )
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
     sut = new FindOneShopperListService(
       getUserFound,
-      getShopperListAccess,
       shopperListRepository,
-      shopperItemRepository
+      shopperListMemberRepository
     )
 
     user = await userRepository.create({
@@ -81,7 +77,8 @@ describe('Find One Shopper List', () => {
 
     expect(shopperList).toEqual({
       ...shopperListCreated,
-      items: [shopperItem1, shopperItem2]
+      user: { name: user.name, username: user.username },
+      shopperItems: [shopperItem1, shopperItem2]
     })
   })
 
@@ -110,7 +107,8 @@ describe('Find One Shopper List', () => {
 
     expect(shopperList).toEqual({
       ...shopperListCreated,
-      items: [shopperItem1, shopperItem2]
+      user: { name: user.name, username: user.username },
+      shopperItems: [shopperItem1, shopperItem2]
     })
   })
 
@@ -151,7 +149,7 @@ describe('Find One Shopper List', () => {
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
 
-  it('should not be able to add item in shopper list if user not found', async () => {
+  it('should not be able to find one shopper list if user not found', async () => {
     await expect(() =>
       sut.execute({
         userId: 'user-not-found',
@@ -160,7 +158,7 @@ describe('Find One Shopper List', () => {
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
 
-  it('should not be able to add item in shopper list if shopper list not found', async () => {
+  it('should not be able to find one shopper list if shopper list not found', async () => {
     await expect(() =>
       sut.execute({
         userId: user.id,

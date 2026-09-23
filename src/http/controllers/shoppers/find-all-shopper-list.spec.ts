@@ -50,8 +50,14 @@ describe('Find All Shopper List Controller (e2e)', () => {
     expect(response.statusCode).toEqual(200)
     expect(response.body.shopperLists).toHaveLength(2)
     expect(response.body.shopperLists).toEqual([
-      expect.objectContaining({ title: `${dataShopperList.title}-2` }),
-      expect.objectContaining({ title: `${dataShopperList.title}-1` })
+      expect.objectContaining({
+        title: `${dataShopperList.title}-2`,
+        user: { name: 'John Doe', username: 'johndoe' }
+      }),
+      expect.objectContaining({
+        title: `${dataShopperList.title}-1`,
+        user: { name: 'John Doe', username: 'johndoe' }
+      })
     ])
     expect(response.body.perPage).toEqual(10)
     expect(response.body.page).toEqual(1)
@@ -224,10 +230,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     await request(app.server)
       .patch(
@@ -244,7 +250,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
     expect(response.statusCode).toEqual(200)
     expect(response.body.shopperLists).toHaveLength(1)
     expect(response.body.shopperLists).toEqual([
-      expect.objectContaining({ id: responseShopperList.body.shopperList.id })
+      expect.objectContaining({
+        id: responseShopperList.body.shopperList.id,
+        user: { name: 'John Doe', username: 'johndoe' }
+      })
     ])
     expect(response.body.perPage).toEqual(10)
     expect(response.body.page).toEqual(1)
@@ -278,10 +287,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     const response = await request(app.server)
       .get(`${API_URL_V1_BASE}/shoppers`)
@@ -322,10 +331,10 @@ describe('Find All Shopper List Controller (e2e)', () => {
 
     await request(app.server)
       .post(
-        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/${dataUser.user.id}/invite`
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/members/invite`
       )
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     await request(app.server)
       .patch(

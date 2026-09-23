@@ -19,6 +19,7 @@ import {
   acceptShopperListInviteResponseSchema
 } from '@/http/schemas/shopper-members/accept-shopper-list-invite.schema.js'
 import {
+  createShopperListInviteBodySchema,
   createShopperListInviteParamsSchema,
   createShopperListInviteResponseSchema
 } from '@/http/schemas/shopper-members/create-shopper-list-invite.schema.js'
@@ -219,13 +220,14 @@ export async function verifiedShopperRoutes(app: FastifyInstance) {
   )
 
   app.post(
-    '/shoppers/:shopperListId/members/:memberId/invite',
+    '/shoppers/:shopperListId/members/invite',
     {
       schema: withAuth({
         tags: ['Shopper', 'Member'],
         summary: 'Create shopper list invite',
         description: 'Create shopper list invite.',
         params: createShopperListInviteParamsSchema,
+        body: createShopperListInviteBodySchema,
         response: createShopperListInviteResponseSchema
       })
     },

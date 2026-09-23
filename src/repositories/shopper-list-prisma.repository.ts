@@ -40,6 +40,33 @@ export class PrismaShopperListRepository implements ShopperListRepository {
     return shopperList ? { ...shopperList } : null
   }
 
+  async findWithItemsAndUserById(id: string) {
+    if (!isUuid(id)) {
+      return null
+    }
+
+    const shopperList = await prisma.shopperList.findUnique({
+      where: { id },
+      include: {
+        user: { select: { name: true, username: true } },
+        shopperItems: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            title: true,
+            quantity: true,
+            id: true,
+            createdAt: true,
+            description: true,
+            purchasedAt: true,
+            shopperListId: true
+          }
+        }
+      }
+    })
+
+    return shopperList ? { ...shopperList } : null
+  }
+
   async findByIdAndUserId(id: string, userId: string) {
     if (!isUuid(id)) {
       return null
@@ -91,6 +118,7 @@ export class PrismaShopperListRepository implements ShopperListRepository {
               : {}
           ]
         },
+        include: { user: { select: { name: true, username: true } } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         take: filters.limit,
         skip: (filters.page - 1) * filters.limit

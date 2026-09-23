@@ -5,12 +5,13 @@ import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.er
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
+import { GetUserFoundByUsernameService } from '../users/get-user-found-by-username.service.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
 
 interface CreateShopperListInviteRequest {
   userId: string
   shopperListId: string
-  memberId: string
+  username: string
 }
 
 interface CreateShopperListInviteResponse {
@@ -20,6 +21,7 @@ interface CreateShopperListInviteResponse {
 export class CreateShopperListInviteService {
   constructor(
     private getUserFound: GetUserFoundService,
+    private getUserFoundByUsername: GetUserFoundByUsernameService,
     private shopperListRepository: ShopperListRepository,
     private shopperListMemberRepository: ShopperListMemberRepository
   ) {}
@@ -27,16 +29,16 @@ export class CreateShopperListInviteService {
   async execute(
     data: CreateShopperListInviteRequest
   ): Promise<CreateShopperListInviteResponse> {
-    if (data.userId === data.memberId) {
-      throw new ForbbidenError()
-    }
-
     const owner = await this.getUserFound.execute({
       userId: data.userId
     })
-    const member = await this.getUserFound.execute({
-      userId: data.memberId
+    const member = await this.getUserFoundByUsername.execute({
+      username: data.username
     })
+
+    if (owner.id === member.id) {
+      throw new ForbbidenError()
+    }
 
     const shopperList = await this.shopperListRepository.findById(
       data.shopperListId

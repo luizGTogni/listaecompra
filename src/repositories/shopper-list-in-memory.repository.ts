@@ -1,12 +1,28 @@
 import { ShopperList, ShopperListInput } from '@/domain/shopper-list.entity.js'
 import { randomUUID } from 'node:crypto'
+import { inMemoryShopperItemRepository } from './shopper-item-in-memory.repository.js'
+import { ShopperItemRepository } from './shopper-item.repository.js'
 import {
   FilterParams,
-  ShopperListRepository
+  ShopperListRepository,
+  ShopperListWithUser
 } from './shopper-list.repository.js'
+import { inMemoryUserRepository } from './user-in-memory.repository.js'
+import { UserRepository } from './user.repository.js'
 
 export class InMemoryShopperListRepository implements ShopperListRepository {
   private items: ShopperList[] = []
+
+  constructor(
+    private userRepository: UserRepository = inMemoryUserRepository,
+    private shopperItemRepository: ShopperItemRepository = inMemoryShopperItemRepository
+  ) {}
+
+  private async getOwner(userId: string) {
+    const user = await this.userRepository.findById(userId)
+
+    return { name: user?.name ?? '', username: user?.username ?? '' }
+  }
 
   async create(data: ShopperListInput) {
     const shopperList: ShopperList = {
@@ -49,6 +65,23 @@ export class InMemoryShopperListRepository implements ShopperListRepository {
     return shopperList ? { ...shopperList } : null
   }
 
+  async findWithItemsAndUserById(id: string) {
+    const shopperList = this.items.find((item) => item.id === id)
+
+    if (!shopperList) {
+      return null
+    }
+
+    const shopperItems =
+      await this.shopperItemRepository.findAllByShopperListId(shopperList.id)
+
+    return {
+      ...shopperList,
+      user: await this.getOwner(shopperList.userId),
+      shopperItems
+    }
+  }
+
   async findByIdAndUserId(id: string, userId: string) {
     const shopperList = this.items.find(
       (item) => item.id === id && item.userId === userId
@@ -84,10 +117,15 @@ export class InMemoryShopperListRepository implements ShopperListRepository {
           item.description.toLowerCase().includes(filters.query.toLowerCase()))
     )
 
-    const shopperLists = filtered.slice(START_INDEX, END_INDEX)
+    const shopperLists: ShopperListWithUser[] = await Promise.all(
+      filtered.slice(START_INDEX, END_INDEX).map(async (item) => ({
+        ...item,
+        user: await this.getOwner(item.userId)
+      }))
+    )
 
     return {
-      shopperLists: shopperLists.map((item) => ({ ...item })),
+      shopperLists,
       page: filters.page,
       perPage: filters.limit,
       total: filtered.length

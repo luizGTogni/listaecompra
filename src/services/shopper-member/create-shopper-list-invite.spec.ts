@@ -10,11 +10,13 @@ import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { InMemoryUserRepository } from '@/repositories/user-in-memory.repository.js'
 import { UserRepository } from '@/repositories/user.repository.js'
+import { GetUserFoundByUsernameService } from '../users/get-user-found-by-username.service.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
 import { CreateShopperListInviteService } from './create-shopper-list-invite.service.js'
 
 let userRepository: UserRepository
 let getUserFound: GetUserFoundService
+let getUserFoundByUsername: GetUserFoundByUsernameService
 let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let sut: CreateShopperListInviteService
@@ -27,10 +29,14 @@ describe('Create Shopper List Invite', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
     getUserFound = new GetUserFoundService(userRepository)
+    getUserFoundByUsername = new GetUserFoundByUsernameService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
-    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository(
+      shopperListRepository
+    )
     sut = new CreateShopperListInviteService(
       getUserFound,
+      getUserFoundByUsername,
       shopperListRepository,
       shopperListMemberRepository
     )
@@ -60,7 +66,7 @@ describe('Create Shopper List Invite', () => {
     const { shopperListMember } = await sut.execute({
       userId: user1.id,
       shopperListId: shopperList.id,
-      memberId: user2.id
+      username: user2.username
     })
 
     const shopperListMemberFound =
@@ -79,12 +85,12 @@ describe('Create Shopper List Invite', () => {
     expect(shopperListMemberFound).toEqual(shopperListMember)
   })
 
-  it('should not be able to create shopper list invite if user request same memberId', async () => {
+  it('should not be able to create shopper list invite if user request same username', async () => {
     await expect(() =>
       sut.execute({
         userId: user1.id,
         shopperListId: shopperList.id,
-        memberId: user1.id
+        username: user1.username
       })
     ).rejects.toBeInstanceOf(ForbbidenError)
   })
@@ -94,7 +100,7 @@ describe('Create Shopper List Invite', () => {
       sut.execute({
         userId: user1.id,
         shopperListId: 'shopper-list-not-found',
-        memberId: user2.id
+        username: user2.username
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
@@ -111,7 +117,7 @@ describe('Create Shopper List Invite', () => {
       sut.execute({
         userId: userNotOwner.id,
         shopperListId: shopperList.id,
-        memberId: user2.id
+        username: user2.username
       })
     ).rejects.toBeInstanceOf(ForbbidenError)
   })
@@ -126,7 +132,7 @@ describe('Create Shopper List Invite', () => {
       sut.execute({
         userId: user1.id,
         shopperListId: shopperList.id,
-        memberId: user2.id
+        username: user2.username
       })
     ).rejects.toBeInstanceOf(ShopperListClosedError)
   })
@@ -135,14 +141,14 @@ describe('Create Shopper List Invite', () => {
     await sut.execute({
       userId: user1.id,
       shopperListId: shopperList.id,
-      memberId: user2.id
+      username: user2.username
     })
 
     await expect(() =>
       sut.execute({
         userId: user1.id,
         shopperListId: shopperList.id,
-        memberId: user2.id
+        username: user2.username
       })
     ).rejects.toBeInstanceOf(ResourceAlreadyExistsError)
   })
@@ -152,7 +158,7 @@ describe('Create Shopper List Invite', () => {
       sut.execute({
         userId: 'user-not-found',
         shopperListId: shopperList.id,
-        memberId: user2.id
+        username: user2.username
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })
@@ -162,7 +168,7 @@ describe('Create Shopper List Invite', () => {
       sut.execute({
         userId: user1.id,
         shopperListId: shopperList.id,
-        memberId: 'member-not-found'
+        username: 'member-not-found'
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
   })

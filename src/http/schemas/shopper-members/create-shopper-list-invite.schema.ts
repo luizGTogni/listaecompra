@@ -19,7 +19,10 @@ export const createShopperListInviteResponseSchema = {
   500: errorSchema
 }
 
+export const createShopperListInviteBodySchema = z.object({
+  username: z.string()
+})
+
 export const createShopperListInviteParamsSchema = z.object({
-  shopperListId: z.string(),
-  memberId: z.string()
+  shopperListId: z.string()
 })
