@@ -15,7 +15,10 @@ const envSchema = z.object({
   DATABASE_PASSWORD: z.string(),
   DATABASE_DB: z.string(),
   DATABASE_PORT: z.coerce.number().default(5432),
-  FRONTEND_URL: z.string().default('http://localhost:3001')
+  FRONTEND_URL: z
+    .string()
+    .default('http://localhost:3001')
+    .transform((value) => value.replace(/\/+$/, ''))
 })
 
 const _env = envSchema.safeParse(process.env)
