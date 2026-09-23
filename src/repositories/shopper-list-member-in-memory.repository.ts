@@ -2,11 +2,19 @@ import {
   ShopperListMember,
   ShopperListMemberInput
 } from '@/domain/shopper-list-member.entity.js'
+import { inMemoryShopperListRepository } from './shopper-list-in-memory.repository.js'
 import { ShopperListMemberRepository } from './shopper-list-member.repository.js'
+import { ShopperListRepository } from './shopper-list.repository.js'
+import { inMemoryUserRepository } from './user-in-memory.repository.js'
+import { UserRepository } from './user.repository.js'
 
 export class InMemoryShopperListMemberRepository implements ShopperListMemberRepository {
-
   private items: ShopperListMember[] = []
+
+  constructor(
+    private shopperListRepository: ShopperListRepository = inMemoryShopperListRepository,
+    private userRepository: UserRepository = inMemoryUserRepository
+  ) {}
 
   async create(data: ShopperListMemberInput) {
     const shopperListMember: ShopperListMember = {
@@ -72,15 +80,36 @@ export class InMemoryShopperListMemberRepository implements ShopperListMemberRep
   }
 
   async findAllByMemberId(memberId: string, onlyInvite: boolean) {
-    if (onlyInvite) {
-      return this.items.filter(
-        (item) => item.memberId === memberId && item.acceptedAt === null
-      )
-    }
-
-    return this.items.filter(
-      (item) => item.memberId === memberId && item.acceptedAt
+    const members = this.items.filter((item) =>
+      onlyInvite
+        ? item.memberId === memberId && item.acceptedAt === null
+        : item.memberId === memberId && item.acceptedAt !== null
     )
+
+    const membersWithList = await Promise.all(
+      members.map(async (member) => {
+        const shopperList = await this.shopperListRepository.findById(
+          member.shopperListId
+        )
+
+        const user = shopperList
+          ? await this.userRepository.findById(shopperList.userId)
+          : null
+
+        return {
+          ...member,
+          shopperList: {
+            title: shopperList?.title ?? '',
+            user: {
+              name: user?.name ?? '',
+              username: user?.username ?? ''
+            }
+          }
+        }
+      })
+    )
+
+    return membersWithList
   }
 }
 

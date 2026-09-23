@@ -1,6 +1,9 @@
 import { makeCreateShopperListInviteService } from '@/http/factories/make-create-shopper-list-invite-service.factory.js'
 import { userAuthSchema } from '@/http/schemas/auth/user-auth.schema.js'
-import { createShopperListInviteParamsSchema } from '@/http/schemas/shopper-members/create-shopper-list-invite.schema.js'
+import {
+  createShopperListInviteBodySchema,
+  createShopperListInviteParamsSchema
+} from '@/http/schemas/shopper-members/create-shopper-list-invite.schema.js'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export async function createShopperListInviteController(
@@ -8,7 +11,8 @@ export async function createShopperListInviteController(
   reply: FastifyReply
 ) {
   const { sub } = userAuthSchema.parse(request.user)
-  const { shopperListId, memberId } = createShopperListInviteParamsSchema.parse(
+  const { username } = createShopperListInviteBodySchema.parse(request.body)
+  const { shopperListId } = createShopperListInviteParamsSchema.parse(
     request.params
   )
 
@@ -17,7 +21,7 @@ export async function createShopperListInviteController(
   const { shopperListMember } = await createShopperListInviteService.execute({
     userId: sub,
     shopperListId,
-    memberId
+    username
   })
 
   return reply.status(201).send({ shopperListMember })

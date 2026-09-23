@@ -3,6 +3,16 @@ import {
   ShopperListMemberInput
 } from '@/domain/shopper-list-member.entity.js'
 
+export type ShopperListMemberWithList = ShopperListMember & {
+  shopperList: {
+    title: string
+    user: {
+      name: string
+      username: string
+    }
+  }
+}
+
 export interface ShopperListMemberRepository {
   create(data: ShopperListMemberInput): Promise<ShopperListMember>
   update(shopperListMember: ShopperListMember): Promise<ShopperListMember>
@@ -20,5 +30,5 @@ export interface ShopperListMemberRepository {
   findAllByMemberId(
     memberId: string,
     onlyInvite: boolean
-  ): Promise<ShopperListMember[]>
+  ): Promise<ShopperListMemberWithList[]>
 }

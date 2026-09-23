@@ -1,5 +1,7 @@
-import { ShopperListMember } from '@/domain/shopper-list-member.entity.js'
-import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
+import {
+  ShopperListMemberRepository,
+  ShopperListMemberWithList
+} from '@/repositories/shopper-list-member.repository.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
 
 interface FindAllShopperListInviteRequest {
@@ -7,7 +9,7 @@ interface FindAllShopperListInviteRequest {
 }
 
 interface FindAllShopperListInviteResponse {
-  shopperListMembers: ShopperListMember[]
+  shopperListMembers: ShopperListMemberWithList[]
 }
 
 export class FindAllShopperListInviteService {

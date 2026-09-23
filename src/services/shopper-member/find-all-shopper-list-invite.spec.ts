@@ -26,7 +26,10 @@ describe('Find All Shopper List Invite', () => {
     userRepository = new InMemoryUserRepository()
     getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
-    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository(
+      shopperListRepository,
+      userRepository
+    )
     sut = new FindAllShopperListInviteService(
       getUserFound,
       shopperListMemberRepository
@@ -75,7 +78,22 @@ describe('Find All Shopper List Invite', () => {
     })
 
     expect(shopperListMembers).toHaveLength(2)
-    expect(shopperListMembers).toEqual([shopperListMember1, shopperListMember2])
+    expect(shopperListMembers).toEqual([
+      {
+        ...shopperListMember1,
+        shopperList: {
+          title: shopperList1.title,
+          user: { name: user1.name, username: user1.username }
+        }
+      },
+      {
+        ...shopperListMember2,
+        shopperList: {
+          title: shopperList2.title,
+          user: { name: user1.name, username: user1.username }
+        }
+      }
+    ])
   })
 
   it('should be able to find all shopper list invite empty', async () => {
@@ -116,6 +134,14 @@ describe('Find All Shopper List Invite', () => {
     })
 
     expect(shopperListMembers).toHaveLength(1)
-    expect(shopperListMembers).toEqual([shopperListMemberCreated2])
+    expect(shopperListMembers).toEqual([
+      {
+        ...shopperListMemberCreated2,
+        shopperList: {
+          title: shopperList2.title,
+          user: { name: user1.name, username: user1.username }
+        }
+      }
+    ])
   })
 })

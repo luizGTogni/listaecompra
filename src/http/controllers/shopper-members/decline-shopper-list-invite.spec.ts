@@ -35,11 +35,9 @@ describe('Decline Shopper List Invite Controller (e2e)', () => {
     const { shopperList } = await createShopperList({ app, token })
 
     await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${dataUser.user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     const response = await request(app.server)
       .delete(
@@ -75,11 +73,9 @@ describe('Decline Shopper List Invite Controller (e2e)', () => {
     const { shopperList } = await createShopperList({ app, token })
 
     await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: user.username })
 
     const response = await request(app.server)
       .delete(
@@ -108,11 +104,9 @@ describe('Decline Shopper List Invite Controller (e2e)', () => {
     const { shopperList } = await createShopperList({ app, token })
 
     await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${dataUser.user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     await request(app.server)
       .patch(
@@ -209,11 +203,9 @@ describe('Decline Shopper List Invite Controller (e2e)', () => {
     const { shopperList } = await createShopperList({ app, token })
 
     await request(app.server)
-      .post(
-        `${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/${dataUser.user.id}/invite`
-      )
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
       .set('Authorization', `Bearer ${token}`)
-      .send()
+      .send({ username: dataUser.user.username })
 
     const userRepository = new PrismaUserRepository()
 
