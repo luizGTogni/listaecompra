@@ -9,7 +9,11 @@ export const findAllShopperListMemberResponseSchema = {
         memberId: z.string(),
         shopperListId: z.string(),
         acceptedAt: z.date().nullable(),
-        invitedAt: z.date()
+        invitedAt: z.date(),
+        user: z.object({
+          name: z.string(),
+          username: z.string()
+        })
       })
     )
   }),

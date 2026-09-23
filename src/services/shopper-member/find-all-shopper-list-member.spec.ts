@@ -29,13 +29,19 @@ let shopperListEmpty: ShopperList
 let shopperListMember1: ShopperListMember
 let shopperListMember2: ShopperListMember
 let shopperListMember3: ShopperListMember
+let expectedMembers: Array<
+  ShopperListMember & { user: { name: string; username: string } }
+>
 
 describe('Find All Shopper List Member', () => {
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository()
     getUserFound = new GetUserFoundService(userRepository)
-    shopperListRepository = new InMemoryShopperListRepository()
-    shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    shopperListRepository = new InMemoryShopperListRepository(userRepository)
+    shopperListMemberRepository = new InMemoryShopperListMemberRepository(
+      shopperListRepository,
+      userRepository
+    )
     getShopperListAccess = new GetShopperListAccessService(
       shopperListRepository,
       shopperListMemberRepository
@@ -75,9 +81,9 @@ describe('Find All Shopper List Member', () => {
     })
 
     user4 = await userRepository.create({
-      name: 'Susan Doe',
-      username: 'susandoe',
-      email: 'susandoe@example.com',
+      name: 'Ana Doe',
+      username: 'anadoe',
+      email: 'anadoe@example.com',
       passwordHash: 'hasher-123456'
     })
 
@@ -117,6 +123,21 @@ describe('Find All Shopper List Member', () => {
       ...shopperListMember3,
       acceptedAt: new Date()
     })
+
+    expectedMembers = [
+      {
+        ...shopperListMember1,
+        user: { name: user2.name, username: user2.username }
+      },
+      {
+        ...shopperListMember2,
+        user: { name: user3.name, username: user3.username }
+      },
+      {
+        ...shopperListMember3,
+        user: { name: user4.name, username: user4.username }
+      }
+    ]
   })
 
   it('should be able to find all shopper list member if owner', async () => {
@@ -126,11 +147,7 @@ describe('Find All Shopper List Member', () => {
     })
 
     expect(shopperListMembers).toHaveLength(3)
-    expect(shopperListMembers).toEqual([
-      shopperListMember1,
-      shopperListMember2,
-      shopperListMember3
-    ])
+    expect(shopperListMembers).toEqual(expectedMembers)
   })
 
   it('should be able to find all shopper list member if member', async () => {
@@ -140,11 +157,7 @@ describe('Find All Shopper List Member', () => {
     })
 
     expect(shopperListMembers).toHaveLength(3)
-    expect(shopperListMembers).toEqual([
-      shopperListMember1,
-      shopperListMember2,
-      shopperListMember3
-    ])
+    expect(shopperListMembers).toEqual(expectedMembers)
   })
 
   it('should be able to find all shopper list member empty', async () => {

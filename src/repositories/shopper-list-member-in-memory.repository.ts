@@ -79,6 +79,27 @@ export class InMemoryShopperListMemberRepository implements ShopperListMemberRep
     return this.items.filter((item) => item.shopperListId === shopperListId)
   }
 
+  async findAllWithUserByShopperListId(shopperListId: string) {
+    const shopperListMembers = this.items.filter(
+      (item) => item.shopperListId === shopperListId
+    )
+    const shopperListMembersWithUser = await Promise.all(
+      shopperListMembers.map(async (member) => {
+        const user = await this.userRepository.findById(member.memberId)
+
+        return {
+          ...member,
+          user: {
+            name: user ? user.name : '',
+            username: user ? user.username : ''
+          }
+        }
+      })
+    )
+
+    return shopperListMembersWithUser
+  }
+
   async findAllByMemberId(memberId: string, onlyInvite: boolean) {
     const members = this.items.filter((item) =>
       onlyInvite

@@ -68,6 +68,16 @@ export class PrismaShopperListMemberRepository implements ShopperListMemberRepos
     return shopperListMembers
   }
 
+  async findAllWithUserByShopperListId(shopperListId: string) {
+    const shopperListMembers = await prisma.shopperListMember.findMany({
+      where: { shopperListId },
+      include: { user: { select: { name: true, username: true } } },
+      orderBy: [{ invitedAt: 'asc' }, { memberId: 'asc' }]
+    })
+
+    return shopperListMembers
+  }
+
   async findAllByMemberId(memberId: string, onlyInvite: boolean) {
     const shopperListMembers = await prisma.shopperListMember.findMany({
       where: { memberId, acceptedAt: onlyInvite ? null : { not: null } },

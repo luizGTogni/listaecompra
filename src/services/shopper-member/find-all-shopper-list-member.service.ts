@@ -1,5 +1,7 @@
-import { ShopperListMember } from '@/domain/shopper-list-member.entity.js'
-import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
+import {
+  ShopperListMemberRepository,
+  ShopperListMemberWithUser
+} from '@/repositories/shopper-list-member.repository.js'
 import { GetShopperListAccessService } from '../shopper/get-shopper-list-access.service.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
 
@@ -9,7 +11,7 @@ interface FindAllShopperListMemberRequest {
 }
 
 interface FindAllShopperListMemberResponse {
-  shopperListMembers: ShopperListMember[]
+  shopperListMembers: ShopperListMemberWithUser[]
 }
 
 export class FindAllShopperListMemberService {
@@ -32,7 +34,7 @@ export class FindAllShopperListMemberService {
     })
 
     const shopperListMembers =
-      await this.shopperListMemberRepository.findAllByShopperListId(
+      await this.shopperListMemberRepository.findAllWithUserByShopperListId(
         shopperList.id
       )
 
