@@ -13,6 +13,13 @@ export type ShopperListMemberWithList = ShopperListMember & {
   }
 }
 
+export type ShopperListMemberWithUser = ShopperListMember & {
+  user: {
+    name: string
+    username: string
+  }
+}
+
 export interface ShopperListMemberRepository {
   create(data: ShopperListMemberInput): Promise<ShopperListMember>
   update(shopperListMember: ShopperListMember): Promise<ShopperListMember>
@@ -27,6 +34,9 @@ export interface ShopperListMemberRepository {
     memberId: string
   ): Promise<ShopperListMember | null>
   findAllByShopperListId(shopperListId: string): Promise<ShopperListMember[]>
+  findAllWithUserByShopperListId(
+    shopperListId: string
+  ): Promise<ShopperListMemberWithUser[]>
   findAllByMemberId(
     memberId: string,
     onlyInvite: boolean

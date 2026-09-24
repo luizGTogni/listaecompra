@@ -48,7 +48,8 @@ describe('Find All Shopper List Member Controller (e2e)', () => {
     expect(response.body.shopperListMembers).toEqual([
       expect.objectContaining({
         shopperListId: shopperList.id,
-        memberId: dataUser.user.id
+        memberId: dataUser.user.id,
+        user: { name: 'Susan Doe', username: 'susandoe' }
       })
     ])
   })
@@ -88,7 +89,58 @@ describe('Find All Shopper List Member Controller (e2e)', () => {
     expect(response.body.shopperListMembers).toEqual([
       expect.objectContaining({
         shopperListId: shopperList.id,
-        memberId: dataUser.user.id
+        memberId: dataUser.user.id,
+        user: { name: 'Susan Doe', username: 'susandoe' }
+      })
+    ])
+  })
+
+  it('should return the name and username of each member in invite order', async () => {
+    const { token } = await createAndAuthUser({ app })
+    const member1 = await createAndAuthUser({
+      app,
+      user: {
+        name: 'Susan Doe',
+        username: 'susandoe',
+        email: 'susandoe@email.com',
+        password: 'hasher-123456'
+      }
+    })
+    const member2 = await createAndAuthUser({
+      app,
+      user: {
+        name: 'Doug Doe',
+        username: 'dougdoe',
+        email: 'dougdoe@email.com',
+        password: 'hasher-123456'
+      }
+    })
+    const { shopperList } = await createShopperList({ app, token })
+
+    await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ username: member1.user.username })
+
+    await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members/invite`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ username: member2.user.username })
+
+    const response = await request(app.server)
+      .get(`${API_URL_V1_BASE}/shoppers/${shopperList.id}/members`)
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperListMembers).toEqual([
+      expect.objectContaining({
+        memberId: member1.user.id,
+        user: { name: 'Susan Doe', username: 'susandoe' }
+      }),
+      expect.objectContaining({
+        memberId: member2.user.id,
+        user: { name: 'Doug Doe', username: 'dougdoe' }
       })
     ])
   })
