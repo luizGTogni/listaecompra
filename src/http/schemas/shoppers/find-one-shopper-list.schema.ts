@@ -22,6 +22,13 @@ export const findOneShopperListResponseSchema = {
           title: z.string(),
           description: z.string(),
           quantity: z.number(),
+          purchasedById: z.string().nullable(),
+          purchasedBy: z
+            .object({
+              name: z.string(),
+              username: z.string()
+            })
+            .nullable(),
           purchasedAt: z.date().nullable(),
           createdAt: z.date()
         })
