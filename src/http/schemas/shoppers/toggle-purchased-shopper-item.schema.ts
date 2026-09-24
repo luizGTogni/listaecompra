@@ -11,6 +11,13 @@ export const togglePurchasedShopperItemResponseSchema = {
       description: z.string(),
       quantity: z.number(),
       purchasedAt: z.date().nullable(),
+      purchasedById: z.string().nullable(),
+      purchasedBy: z
+        .object({
+          name: z.string(),
+          username: z.string()
+        })
+        .nullable(),
       createdAt: z.date()
     })
   }),

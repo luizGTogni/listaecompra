@@ -13,6 +13,7 @@ interface FindOneShopperItemRequest {
 
 interface FindOneShopperItemResponse {
   shopperItem: ShopperItem & {
+    purchasedBy: { name: string; username: string } | null
     shopperList: Omit<ShopperList, 'id' | 'createdAt'>
   }
 }
@@ -43,9 +44,16 @@ export class FindOneShopperItemService {
       throw new ResourceNotFoundError()
     }
 
+    const purchasedBy = shopperItem.purchasedById
+      ? await this.getUserFound.execute({ userId: shopperItem.purchasedById })
+      : null
+
     return {
       shopperItem: {
         ...shopperItem,
+        purchasedBy: purchasedBy
+          ? { name: purchasedBy.name, username: purchasedBy.username }
+          : null,
         shopperList: {
           userId: shopperList.userId,
           title: shopperList.title,

@@ -73,12 +73,33 @@ describe('Find One Shopper Item', () => {
 
     expect(shopperItem).toEqual({
       ...shopperItemCreated,
+      purchasedBy: null,
       shopperList: {
         userId: shopperListCreated.userId,
         title: shopperListCreated.title,
         description: shopperListCreated.description,
         closedAt: shopperListCreated.closedAt
       }
+    })
+  })
+
+  it('should be able to find one shopper item with who purchased it', async () => {
+    await shopperItemRepository.update({
+      ...shopperItemCreated,
+      purchasedById: user.id,
+      purchasedAt: new Date()
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperListCreated.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    expect(shopperItem.purchasedById).toEqual(user.id)
+    expect(shopperItem.purchasedBy).toEqual({
+      name: user.name,
+      username: user.username
     })
   })
 
@@ -108,6 +129,7 @@ describe('Find One Shopper Item', () => {
 
     expect(shopperItem).toEqual({
       ...shopperItemCreated,
+      purchasedBy: null,
       shopperList: {
         userId: shopperListCreated.userId,
         title: shopperListCreated.title,

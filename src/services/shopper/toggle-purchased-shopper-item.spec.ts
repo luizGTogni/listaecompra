@@ -89,9 +89,11 @@ describe('Toggle Purchased Shopper Item', () => {
 
     expect(shopperItem).toEqual({
       ...shopperItemCreated,
+      purchasedById: user.id,
+      purchasedBy: { name: user.name, username: user.username },
       purchasedAt: new Date('2026-09-01T10:40:00Z')
     })
-    expect(shopperItem).toEqual(shopperItemUpdated)
+    expect(shopperItem).toEqual({ ...shopperItemUpdated, purchasedBy: expect.anything() })
   })
 
   it('should be able to toggle purchased shopper item for not purchased', async () => {
@@ -99,6 +101,7 @@ describe('Toggle Purchased Shopper Item', () => {
 
     await shopperItemRepository.update({
       ...shopperItemCreated,
+      purchasedById: user.id,
       purchasedAt: new Date()
     })
 
@@ -114,11 +117,118 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperList.id
       )
 
-    expect(shopperItem).toEqual(shopperItemUpdated)
+    expect(shopperItem).toEqual({ ...shopperItemUpdated, purchasedBy: null })
     expect(shopperItem).toEqual({
       ...shopperItemCreated,
+      purchasedById: null,
+      purchasedBy: null,
       purchasedAt: null
     })
+  })
+
+  it('should be able to save who purchased the shopper item when member with accepted invite', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: member.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    expect(shopperItem.purchasedById).toEqual(member.id)
+    expect(shopperItem.purchasedBy).toEqual({
+      name: member.name,
+      username: member.username
+    })
+  })
+
+  it('should be able to clear who purchased when another user unmarks the shopper item', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    await sut.execute({
+      userId: member.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    expect(shopperItem.purchasedAt).toBeNull()
+    expect(shopperItem.purchasedById).toBeNull()
+    expect(shopperItem.purchasedBy).toBeNull()
+  })
+
+  it('should be able to save the new user who purchased when marking again after unmarking', async () => {
+    const member = await userRepository.create({
+      name: 'Susan Doe',
+      username: 'susandoe',
+      email: 'susandoe@example.com',
+      passwordHash: 'hasher-123456'
+    })
+
+    const shopperListMember = await shopperListMemberRepository.create({
+      shopperListId: shopperList.id,
+      memberId: member.id
+    })
+
+    await shopperListMemberRepository.update({
+      ...shopperListMember,
+      acceptedAt: new Date()
+    })
+
+    await sut.execute({
+      userId: member.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    await sut.execute({
+      userId: member.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id
+    })
+
+    expect(shopperItem.purchasedById).toEqual(user.id)
   })
 
   it('should be able to toggle purchased shopper item if member with accepted invite', async () => {

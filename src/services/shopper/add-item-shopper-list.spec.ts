@@ -79,6 +79,7 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
     })
@@ -105,6 +106,7 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
     })
@@ -142,6 +144,7 @@ describe('Add Item Shopper List', () => {
       title: 'ItemTest',
       description: 'ItemDescriptionTest',
       quantity: 2,
+      purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
     })

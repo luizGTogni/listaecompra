@@ -57,6 +57,8 @@ export class PrismaShopperListRepository implements ShopperListRepository {
             id: true,
             createdAt: true,
             description: true,
+            purchasedById: true,
+            purchasedBy: { select: { name: true, username: true } },
             purchasedAt: true,
             shopperListId: true
           }

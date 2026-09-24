@@ -19,7 +19,7 @@ describe('Toggle Purchased Shopper Item Controller (e2e)', () => {
   })
 
   it('should be able to toggle purchased shopper item for purchased', async () => {
-    const { token } = await createAndAuthUser({ app })
+    const { token, user } = await createAndAuthUser({ app })
 
     const dataShopperList = {
       title: 'ShopperList',
@@ -65,6 +65,8 @@ describe('Toggle Purchased Shopper Item Controller (e2e)', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      purchasedById: user.id,
+      purchasedBy: { name: user.name, username: user.username },
       purchasedAt: expect.any(String),
       createdAt: expect.any(String)
     })
@@ -124,6 +126,8 @@ describe('Toggle Purchased Shopper Item Controller (e2e)', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      purchasedById: null,
+      purchasedBy: null,
       purchasedAt: null,
       createdAt: expect.any(String)
     })
@@ -193,6 +197,12 @@ describe('Toggle Purchased Shopper Item Controller (e2e)', () => {
       .send()
 
     expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperItem).toEqual(
+      expect.objectContaining({
+        purchasedById: dataUser.user.id,
+        purchasedBy: { name: 'Susan Doe', username: 'susandoe' }
+      })
+    )
   })
 
   it('should not be able to toggle purchased shopper item if member with pending invite', async () => {

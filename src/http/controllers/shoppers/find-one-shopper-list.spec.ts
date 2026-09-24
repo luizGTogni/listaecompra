@@ -78,6 +78,53 @@ describe('Find One Shopper List Controller (e2e)', () => {
     })
   })
 
+  it('should be able to find one shopper list with who purchased each item', async () => {
+    const { token, user } = await createAndAuthUser({ app })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: 'ShopperList Description' })
+
+    const shopperListId = responseShopperList.body.shopperList.id
+
+    const responseShopperItem = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperItem1', description: '', quantity: 1 })
+
+    await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperItem2', description: '', quantity: 1 })
+
+    await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${responseShopperItem.body.shopperItem.id}/purchase`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    const response = await request(app.server)
+      .get(`${API_URL_V1_BASE}/shoppers/${shopperListId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperList.shopperItems).toEqual([
+      expect.objectContaining({
+        title: 'ShopperItem1',
+        purchasedById: user.id,
+        purchasedBy: { name: user.name, username: user.username }
+      }),
+      expect.objectContaining({
+        title: 'ShopperItem2',
+        purchasedById: null,
+        purchasedBy: null
+      })
+    ])
+  })
+
   it('should be able to find one shopper list if member with accepted invite', async () => {
     const { token } = await createAndAuthUser({ app })
     const dataUser = await createAndAuthUser({
