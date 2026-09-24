@@ -12,7 +12,9 @@ interface TogglePurchasedShopperItemRequest {
 }
 
 interface TogglePurchasedShopperItemResponse {
-  shopperItem: ShopperItem
+  shopperItem: ShopperItem & {
+    purchasedBy: { name: string; username: string } | null
+  }
 }
 
 export class TogglePurchasedShopperItemService {
@@ -25,7 +27,7 @@ export class TogglePurchasedShopperItemService {
   async execute(
     data: TogglePurchasedShopperItemRequest
   ): Promise<TogglePurchasedShopperItemResponse> {
-    await this.getUserFound.execute({ userId: data.userId })
+    const user = await this.getUserFound.execute({ userId: data.userId })
     const shopperList = await this.getShopperListAccess.execute({
       shopperListId: data.shopperListId,
       userId: data.userId
@@ -47,8 +49,18 @@ export class TogglePurchasedShopperItemService {
 
     shopperItem.purchasedAt = shopperItem.purchasedAt ? null : new Date()
 
-    await this.shopperItemRepository.update(shopperItem)
+    shopperItem.purchasedById = shopperItem.purchasedById ? null : data.userId
 
-    return { shopperItem }
+    const shopperItemUpdated =
+      await this.shopperItemRepository.update(shopperItem)
+
+    return {
+      shopperItem: {
+        ...shopperItemUpdated,
+        purchasedBy: shopperItemUpdated.purchasedById
+          ? { name: user.name, username: user.username }
+          : null
+      }
+    }
   }
 }

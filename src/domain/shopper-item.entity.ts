@@ -4,6 +4,7 @@ export interface ShopperItem {
   title: string
   description: string
   quantity: number
+  purchasedById: string | null
   purchasedAt: Date | null
   createdAt: Date
 }

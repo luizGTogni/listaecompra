@@ -20,6 +20,7 @@ model User {
   codes              Code[]
   shopperLists       ShopperList[]
   shopperListMembers ShopperListMember[]
+  shopperItems       ShopperItem[]
 
   @@map("users")
 }
@@ -69,6 +70,9 @@ model ShopperItem {
 
   shopperListId String      @map("shopper_list_id") @db.Uuid
   shopperList   ShopperList @relation(fields: [shopperListId], references: [id])
+
+  purchasedById String? @map("purchased_by_id") @db.Uuid
+  purchasedBy   User?   @relation(fields: [purchasedById], references: [id], onDelete: SetNull)
 
   @@map("shopper_items")
 }
