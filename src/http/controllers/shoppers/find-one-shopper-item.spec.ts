@@ -69,6 +69,8 @@ describe('Find One Shopper Item Controller (e2e)', () => {
       title: 'ShopperItem2',
       description: '',
       quantity: 2,
+      purchasedById: null,
+      purchasedBy: null,
       purchasedAt: null,
       createdAt: expect.any(String),
       shopperList: {
@@ -139,6 +141,109 @@ describe('Find One Shopper Item Controller (e2e)', () => {
     expect(response.statusCode).toEqual(200)
     expect(response.body.shopperItem).toEqual(
       expect.objectContaining({ id: responseShopperItem.body.shopperItem.id })
+    )
+  })
+
+  it('should be able to find one shopper item with who purchased it', async () => {
+    const { token } = await createAndAuthUser({ app })
+    const dataUser = await createAndAuthUser({
+      app,
+      user: {
+        name: 'Susan Doe',
+        username: 'susandoe',
+        email: 'susandoe@email.com',
+        password: 'hasher-123456'
+      }
+    })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: 'ShopperList Description' })
+
+    const shopperListId = responseShopperList.body.shopperList.id
+
+    const responseShopperItem = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperItem', description: '', quantity: 1 })
+
+    const shopperItemId = responseShopperItem.body.shopperItem.id
+
+    await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperListId}/members/invite`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ username: dataUser.user.username })
+
+    await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/members/${dataUser.user.id}/accept`
+      )
+      .set('Authorization', `Bearer ${dataUser.token}`)
+      .send()
+
+    await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}/purchase`
+      )
+      .set('Authorization', `Bearer ${dataUser.token}`)
+      .send()
+
+    const response = await request(app.server)
+      .get(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperItem).toEqual(
+      expect.objectContaining({
+        purchasedAt: expect.any(String),
+        purchasedById: dataUser.user.id,
+        purchasedBy: { name: 'Susan Doe', username: 'susandoe' }
+      })
+    )
+  })
+
+  it('should not return who purchased after the shopper item is unmarked', async () => {
+    const { token } = await createAndAuthUser({ app })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: 'ShopperList Description' })
+
+    const shopperListId = responseShopperList.body.shopperList.id
+
+    const responseShopperItem = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperItem', description: '', quantity: 1 })
+
+    const shopperItemId = responseShopperItem.body.shopperItem.id
+    const purchaseUrl = `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}/purchase`
+
+    await request(app.server)
+      .patch(purchaseUrl)
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    await request(app.server)
+      .patch(purchaseUrl)
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    const response = await request(app.server)
+      .get(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send()
+
+    expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperItem).toEqual(
+      expect.objectContaining({
+        purchasedAt: null,
+        purchasedById: null,
+        purchasedBy: null
+      })
     )
   })
 
