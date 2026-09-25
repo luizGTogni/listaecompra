@@ -21,7 +21,7 @@ export class InMemoryShopperListMemberRepository implements ShopperListMemberRep
       shopperListId: data.shopperListId,
       memberId: data.memberId,
       invitedAt: new Date(),
-      acceptedAt: null
+      acceptedAt: data.acceptedAt ? data.acceptedAt : null
     }
 
     this.items.push(shopperListMember)

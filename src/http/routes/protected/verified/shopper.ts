@@ -1,6 +1,7 @@
 import { acceptShopperListInviteController } from '@/http/controllers/shopper-members/accept-shopper-list-invite.controller.js'
 import { createShopperListInviteController } from '@/http/controllers/shopper-members/create-shopper-list-invite.controller.js'
 import { declineShopperListInviteController } from '@/http/controllers/shopper-members/decline-shopper-list-invite.controller.js'
+import { enterForShareCodeInviteController } from '@/http/controllers/shopper-members/enter-for-share-code-invite.controller.js'
 import { findAllShopperListMemberController } from '@/http/controllers/shopper-members/find-all-shopper-list-member.controller.js'
 import { removeShopperListMemberController } from '@/http/controllers/shopper-members/remove-shopper-list-member.controller.js'
 import { addItemShopperListController } from '@/http/controllers/shoppers/add-item-shopper-list.controller.js'
@@ -11,6 +12,7 @@ import { findOneShopperItemController } from '@/http/controllers/shoppers/find-o
 import { findOneShopperListController } from '@/http/controllers/shoppers/find-one-shopper-list.controller.js'
 import { removeItemShopperListController } from '@/http/controllers/shoppers/remove-item-shopper-list.controller.js'
 import { toggleClosedShopperListController } from '@/http/controllers/shoppers/toggle-closed-shopper-list.controller.js'
+import { resetShareCodeController } from '@/http/controllers/shoppers/reset-share-code.controller.js'
 import { togglePurchasedShopperItemController } from '@/http/controllers/shoppers/toggle-purchased-shopper-item.controller.js'
 import { updateShopperItemQuantityController } from '@/http/controllers/shoppers/update-shopper-item-quantity.controller.js'
 import { withAuth } from '@/http/schemas/auth/with-auth.schema.js'
@@ -27,6 +29,10 @@ import {
   declineShopperListInviteParamsSchema,
   declineShopperListInviteResponseSchema
 } from '@/http/schemas/shopper-members/decline-shopper-list-invite.schema.js'
+import {
+  enterForShareCodeInviteBodySchema,
+  enterForShareCodeInviteResponseSchema
+} from '@/http/schemas/shopper-members/enter-for-share-code-invite.schema.js'
 import { findAllShopperListMemberResponseSchema } from '@/http/schemas/shopper-members/find-all-shopper-list-member.schema.js'
 import {
   removeShopperListMemberParamsSchema,
@@ -61,6 +67,10 @@ import {
   removeItemShopperListParamsSchema,
   removeItemShopperListResponseSchema
 } from '@/http/schemas/shoppers/remove-item-shopper-list.schema.js'
+import {
+  resetShareCodeParamsSchema,
+  resetShareCodeResponseSchema
+} from '@/http/schemas/shoppers/reset-share-code.schema.js'
 import {
   toggleClosedShopperListParamsSchema,
   toggleClosedShopperListResponseSchema
@@ -287,5 +297,33 @@ export async function verifiedShopperRoutes(app: FastifyInstance) {
       })
     },
     removeShopperListMemberController
+  )
+
+  app.patch(
+    '/shoppers/:shopperListId/share-code/reset',
+    {
+      schema: withAuth({
+        tags: ['Shopper'],
+        summary: 'Reset share code',
+        description: 'Generate a new share code for the shopper list.',
+        params: resetShareCodeParamsSchema,
+        response: resetShareCodeResponseSchema
+      })
+    },
+    resetShareCodeController
+  )
+
+  app.post(
+    '/shoppers/members/enter',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Member'],
+        summary: 'Enter for share code',
+        description: 'Enter in a shopper list using its share code.',
+        body: enterForShareCodeInviteBodySchema,
+        response: enterForShareCodeInviteResponseSchema
+      })
+    },
+    enterForShareCodeInviteController
   )
 }
