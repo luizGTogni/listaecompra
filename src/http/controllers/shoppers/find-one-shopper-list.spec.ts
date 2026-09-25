@@ -66,6 +66,7 @@ describe('Find One Shopper List Controller (e2e)', () => {
     expect(response.body.shopperList).toEqual({
       id: expect.any(String),
       userId: user.id,
+      shareCode: expect.any(String),
       title: dataShopperList.title,
       description: dataShopperList.description,
       closedAt: null,

@@ -8,4 +8,5 @@ export interface ShopperListMember {
 export interface ShopperListMemberInput {
   shopperListId: string
   memberId: string
+  acceptedAt?: Date
 }

@@ -190,7 +190,9 @@ describe('Find One Shopper Item Controller (e2e)', () => {
       .send()
 
     const response = await request(app.server)
-      .get(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}`)
+      .get(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}`
+      )
       .set('Authorization', `Bearer ${token}`)
       .send()
 
@@ -233,7 +235,9 @@ describe('Find One Shopper Item Controller (e2e)', () => {
       .send()
 
     const response = await request(app.server)
-      .get(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}`)
+      .get(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}`
+      )
       .set('Authorization', `Bearer ${token}`)
       .send()
 

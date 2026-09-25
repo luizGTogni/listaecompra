@@ -2,8 +2,8 @@ import { z } from 'zod'
 import { errorSchema } from '../errors/error.schema.js'
 import { zodErrorSchema } from '../errors/zod-error.schema.js'
 
-export const createShopperListResponseSchema = {
-  201: z.object({
+export const resetShareCodeResponseSchema = {
+  200: z.object({
     shopperList: z.object({
       id: z.uuid(),
       userId: z.string(),
@@ -15,12 +15,13 @@ export const createShopperListResponseSchema = {
     })
   }),
   400: zodErrorSchema,
+  401: errorSchema,
+  403: errorSchema,
   404: errorSchema,
   409: errorSchema,
   500: errorSchema
 }
 
-export const createShopperListBodySchema = z.object({
-  title: z.string().trim().min(1).max(60),
-  description: z.string().trim().max(200).default('')
+export const resetShareCodeParamsSchema = z.object({
+  shopperListId: z.string()
 })

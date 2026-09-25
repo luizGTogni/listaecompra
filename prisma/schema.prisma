@@ -46,6 +46,7 @@ model Code {
 
 model ShopperList {
   id          String    @id @default(uuid()) @db.Uuid
+  shareCode   String    @unique @default(uuid()) @map("share_code")
   title       String
   description String    @default("")
   closedAt    DateTime? @map("closed_at")

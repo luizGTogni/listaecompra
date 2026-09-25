@@ -28,6 +28,7 @@ export class InMemoryShopperListRepository implements ShopperListRepository {
     const shopperList: ShopperList = {
       id: randomUUID(),
       userId: data.userId,
+      shareCode: randomUUID(),
       title: data.title,
       description: data.description,
       closedAt: null,
@@ -61,6 +62,12 @@ export class InMemoryShopperListRepository implements ShopperListRepository {
 
   async findById(id: string) {
     const shopperList = this.items.find((item) => item.id === id)
+
+    return shopperList ? { ...shopperList } : null
+  }
+
+  async findByShareCode(shareCode: string) {
+    const shopperList = this.items.find((item) => item.shareCode === shareCode)
 
     return shopperList ? { ...shopperList } : null
   }

@@ -45,6 +45,7 @@ describe('Create Shopper List', () => {
     expect(shopperList).toEqual({
       id: expect.any(String),
       userId: user.id,
+      shareCode: expect.any(String),
       title: dataShopperList.title,
       description: dataShopperList.description,
       closedAt: null,
@@ -67,6 +68,7 @@ describe('Create Shopper List', () => {
     expect(shopperList).toEqual({
       id: expect.any(String),
       userId: user.id,
+      shareCode: expect.any(String),
       title: dataShopperList.title,
       description: dataShopperList.description,
       closedAt: null,
