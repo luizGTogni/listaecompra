@@ -7,6 +7,7 @@ export const createShopperListResponseSchema = {
     shopperList: z.object({
       id: z.uuid(),
       userId: z.string(),
+      shareCode: z.string(),
       title: z.string(),
       description: z.string(),
       closedAt: z.date().nullable(),

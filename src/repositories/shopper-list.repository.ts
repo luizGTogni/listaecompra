@@ -32,6 +32,7 @@ export interface ShopperListRepository {
   delete(id: string): Promise<void>
   deleteAll(): Promise<void>
   findById(id: string): Promise<ShopperList | null>
+  findByShareCode(shareCode: string): Promise<ShopperList | null>
   findWithItemsAndUserById(id: string): Promise<ShopperListWithItemsUser | null>
   findByIdAndUserId(id: string, userId: string): Promise<ShopperList | null>
   findByTitleAndUserId(

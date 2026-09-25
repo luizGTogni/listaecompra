@@ -7,6 +7,7 @@ export const findOneShopperListResponseSchema = {
     shopperList: z.object({
       id: z.string(),
       userId: z.string(),
+      shareCode: z.string(),
       title: z.string(),
       description: z.string(),
       closedAt: z.date().nullable(),

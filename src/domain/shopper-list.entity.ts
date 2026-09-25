@@ -1,6 +1,7 @@
 export interface ShopperList {
   id: string
   userId: string
+  shareCode: string
   title: string
   description: string
   closedAt: Date | null

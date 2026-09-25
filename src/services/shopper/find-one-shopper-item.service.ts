@@ -14,7 +14,7 @@ interface FindOneShopperItemRequest {
 interface FindOneShopperItemResponse {
   shopperItem: ShopperItem & {
     purchasedBy: { name: string; username: string } | null
-    shopperList: Omit<ShopperList, 'id' | 'createdAt'>
+    shopperList: Omit<ShopperList, 'id' | 'createdAt' | 'shareCode'>
   }
 }
 

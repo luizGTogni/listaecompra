@@ -40,6 +40,18 @@ export class PrismaShopperListRepository implements ShopperListRepository {
     return shopperList ? { ...shopperList } : null
   }
 
+  async findByShareCode(shareCode: string) {
+    if (!isUuid(shareCode)) {
+      return null
+    }
+
+    const shopperList = await prisma.shopperList.findUnique({
+      where: { shareCode }
+    })
+
+    return shopperList ? { ...shopperList } : null
+  }
+
   async findWithItemsAndUserById(id: string) {
     if (!isUuid(id)) {
       return null
