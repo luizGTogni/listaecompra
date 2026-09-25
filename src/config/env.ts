@@ -10,6 +10,15 @@ const envSchema = z.object({
   JWT_SECRET: z.string(),
   RESEND_API_KEY: z.string(),
   MAIL_FROM: z.string().default('Lista&Compra <onboarding@resend.dev>'),
+  // NVIDIA NIM keys, tried in order: the second one is the fallback when the
+  // first is rate limited or fails. Both optional: without any, the AI
+  // routes answer 503.
+  NVIDIA_NIM_API_KEY_1: z.string().optional(),
+  NVIDIA_NIM_API_KEY_2: z.string().optional(),
+  NVIDIA_NIM_MODEL: z.string().default('meta/llama-3.3-70b-instruct'),
+  NVIDIA_NIM_API_URL: z
+    .string()
+    .default('https://integrate.api.nvidia.com/v1/chat/completions'),
   DATABASE_URL: z.string(),
   DATABASE_USER: z.string(),
   DATABASE_PASSWORD: z.string(),
