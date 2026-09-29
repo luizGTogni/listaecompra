@@ -7,12 +7,24 @@ import {
 } from './event-publisher.driver.js'
 
 export class RedisEventPublisherDriver implements EventPublisherDriver {
-  private publisherClient = new Redis(env.REDIS_URL)
-  private subscriberClient = new Redis(env.REDIS_URL)
+  // keepAlive envia pacotes de TCP keep-alive, para o Upstash (e outros
+  // provedores) não derrubarem a conexão por ficar ociosa. ioredis já
+  // reconecta sozinho quando a conexão cai, mas sem um listener de
+  // 'error' ele registra "Unhandled error event" a cada queda.
+  private publisherClient = new Redis(env.REDIS_URL, { keepAlive: 10_000 })
+  private subscriberClient = new Redis(env.REDIS_URL, { keepAlive: 10_000 })
 
   private listenersByChannel = new Map<string, Set<EventListener>>()
 
   constructor() {
+    this.publisherClient.on('error', (error) => {
+      console.error('[RedisEventPublisherDriver] publisher error', error)
+    })
+
+    this.subscriberClient.on('error', (error) => {
+      console.error('[RedisEventPublisherDriver] subscriber error', error)
+    })
+
     this.subscriberClient.on('message', (channel, message) => {
       const listeners = this.listenersByChannel.get(channel)
 
