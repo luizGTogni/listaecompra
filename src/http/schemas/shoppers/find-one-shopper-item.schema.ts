@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { itemUnitSchema } from './item-unit.schema.js'
 import { errorSchema } from '../errors/error.schema.js'
 import { zodErrorSchema } from '../errors/zod-error.schema.js'
 
@@ -10,6 +11,7 @@ export const findOneShopperItemResponseSchema = {
       title: z.string(),
       description: z.string(),
       quantity: z.number(),
+      unit: itemUnitSchema,
       purchasedById: z.string().nullable(),
       purchasedBy: z
         .object({

@@ -1,6 +1,7 @@
 import { prisma } from '@/config/prisma.js'
 import { ShopperList, ShopperListInput } from '@/domain/shopper-list.entity.js'
 import { isUuid } from '@/utils/is-uuid.js'
+import { withNumberQuantity } from './shopper-item-prisma.mapper.js'
 import {
   FilterParams,
   ShopperListRepository
@@ -66,6 +67,7 @@ export class PrismaShopperListRepository implements ShopperListRepository {
           select: {
             title: true,
             quantity: true,
+            unit: true,
             id: true,
             createdAt: true,
             description: true,
@@ -78,7 +80,12 @@ export class PrismaShopperListRepository implements ShopperListRepository {
       }
     })
 
-    return shopperList ? { ...shopperList } : null
+    return shopperList
+      ? {
+          ...shopperList,
+          shopperItems: shopperList.shopperItems.map(withNumberQuantity)
+        }
+      : null
   }
 
   async findByIdAndUserId(id: string, userId: string) {

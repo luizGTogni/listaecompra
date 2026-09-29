@@ -10,9 +10,8 @@ export async function addItemShopperListController(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { title, description, quantity } = addItemShopperListBodySchema.parse(
-    request.body
-  )
+  const { title, description, quantity, unit } =
+    addItemShopperListBodySchema.parse(request.body)
   const { shopperListId } = addItemShopperListParamsSchema.parse(request.params)
 
   const { sub } = userAuthSchema.parse(request.user)
@@ -23,6 +22,7 @@ export async function addItemShopperListController(
     title,
     description,
     quantity,
+    unit,
     shopperListId,
     userId: sub
   })

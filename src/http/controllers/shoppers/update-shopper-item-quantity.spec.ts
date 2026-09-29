@@ -66,6 +66,7 @@ describe('Update Shopper Item Quantity Controller (e2e)', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: 10,
+      unit: 'UNIT',
       purchasedAt: null,
       createdAt: expect.any(String)
     })
@@ -347,5 +348,44 @@ describe('Update Shopper Item Quantity Controller (e2e)', () => {
     expect(response.body).toEqual(
       expect.objectContaining({ name: 'UserNotVerified' })
     )
+  })
+
+  it('should be able to change the unit and use a fractional quantity', async () => {
+    const { token } = await createAndAuthUser({ app })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: '' })
+
+    const shopperListId = responseShopperList.body.shopperList.id
+
+    const responseShopperItem = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers/${shopperListId}/items/add`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Frango', quantity: 1 })
+
+    const shopperItemId = responseShopperItem.body.shopperItem.id
+
+    const response = await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}/quantity`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quantity: 1.5, unit: 'KG' })
+
+    expect(response.statusCode).toEqual(200)
+    expect(response.body.shopperItem).toEqual(
+      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
+    )
+
+    const responseInvalid = await request(app.server)
+      .patch(
+        `${API_URL_V1_BASE}/shoppers/${shopperListId}/items/${shopperItemId}/quantity`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quantity: 2.5, unit: 'BOTTLE' })
+
+    expect(responseInvalid.statusCode).toEqual(400)
   })
 })

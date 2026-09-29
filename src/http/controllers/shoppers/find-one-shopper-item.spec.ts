@@ -69,6 +69,7 @@ describe('Find One Shopper Item Controller (e2e)', () => {
       title: 'ShopperItem2',
       description: '',
       quantity: 2,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedBy: null,
       purchasedAt: null,

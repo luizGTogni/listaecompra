@@ -10,7 +10,9 @@ export async function updateShopperItemQuantityController(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { quantity } = updateShopperItemQuantityBodySchema.parse(request.body)
+  const { quantity, unit } = updateShopperItemQuantityBodySchema.parse(
+    request.body
+  )
   const { shopperItemId, shopperListId } =
     updateShopperItemQuantityParamsSchema.parse(request.params)
   const { sub } = userAuthSchema.parse(request.user)
@@ -22,7 +24,8 @@ export async function updateShopperItemQuantityController(
     shopperItemId,
     shopperListId,
     userId: sub,
-    quantity
+    quantity,
+    unit
   })
 
   return reply.status(200).send({ shopperItem })
