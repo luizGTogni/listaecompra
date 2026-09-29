@@ -5,6 +5,7 @@ import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { AddItemShopperListService } from '@/services/shopper/add-item-shopper-list.service.js'
 import { GetShopperListAccessService } from '@/services/shopper/get-shopper-list-access.service.js'
 import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
+import { makeEventPublisher } from './make-event-publisher.factory.js'
 
 export function makeAddItemShopperListService() {
   const userRepository = new PrismaUserRepository()
@@ -22,6 +23,7 @@ export function makeAddItemShopperListService() {
   return new AddItemShopperListService(
     getUserFound,
     getShopperListAccess,
-    shopperItemRepository
+    shopperItemRepository,
+    makeEventPublisher()
   )
 }

@@ -1,5 +1,7 @@
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
@@ -22,6 +24,7 @@ let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
+let eventPublisher: EventPublisherDriver
 let sut: AddItemShopperListService
 
 let user: User
@@ -38,10 +41,12 @@ describe('Add Item Shopper List', () => {
       shopperListMemberRepository
     )
     shopperItemRepository = new InMemoryShopperItemRepository()
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new AddItemShopperListService(
       getUserFound,
       getShopperListAccess,
-      shopperItemRepository
+      shopperItemRepository,
+      eventPublisher
     )
 
     user = await userRepository.create({
@@ -288,5 +293,47 @@ describe('Add Item Shopper List', () => {
         quantity: dataShopperItem.quantity
       })
     ).rejects.toBeInstanceOf(InvalidItemQuantityError)
+  })
+
+  it('should publish item-added event when the item is added', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    const { shopperItem } = await sut.execute({
+      shopperListId: shopperList.id,
+      userId: user.id,
+      title: 'ItemTest',
+      description: '',
+      quantity: 2
+    })
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-added',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
+  })
+
+  it('should not publish event if shopper list already closed', async () => {
+    await shopperListRepository.update({
+      ...shopperList,
+      closedAt: new Date()
+    })
+
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        title: 'ItemTest',
+        description: '',
+        quantity: 2
+      })
+    ).rejects.toBeInstanceOf(ShopperListClosedError)
+
+    expect(listener).not.toHaveBeenCalled()
   })
 })

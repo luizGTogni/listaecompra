@@ -1,5 +1,7 @@
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { ForbbidenError } from '@/http/types/errors/forbbiden.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
@@ -17,6 +19,7 @@ let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let getShopperListAccess: GetShopperListAccessService
+let eventPublisher: EventPublisherDriver
 let sut: RemoveShopperListMemberService
 
 let user1: User
@@ -35,10 +38,12 @@ describe('Remove Shopper List Member', () => {
       shopperListRepository,
       shopperListMemberRepository
     )
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new RemoveShopperListMemberService(
       getUserFound,
       getShopperListAccess,
-      shopperListMemberRepository
+      shopperListMemberRepository,
+      eventPublisher
     )
 
     user1 = await userRepository.create({
@@ -231,5 +236,55 @@ describe('Remove Shopper List Member', () => {
         memberId: userNotInvited.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should publish member-removed event when the owner removes a member', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await sut.execute({
+      requesterId: user1.id,
+      shopperListId: shopperList.id,
+      memberId: user2.id
+    })
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'member-removed',
+      actorId: user1.id,
+      memberId: user2.id
+    })
+  })
+
+  it('should publish member-removed event when member remove himself', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await sut.execute({
+      requesterId: user2.id,
+      shopperListId: shopperList.id,
+      memberId: user2.id
+    })
+
+    expect(listener).toHaveBeenCalledWith({
+      type: 'member-removed',
+      actorId: user2.id,
+      memberId: user2.id
+    })
+  })
+
+  it('should not publish event if requester is a member removing other member', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        requesterId: user3.id,
+        shopperListId: shopperList.id,
+        memberId: user2.id
+      })
+    ).rejects.toBeInstanceOf(ForbbidenError)
+
+    expect(listener).not.toHaveBeenCalled()
   })
 })

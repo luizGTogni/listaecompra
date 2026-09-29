@@ -1,4 +1,5 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperItemAlreadyPurchasedError } from '@/http/types/errors/shopper-item-already-purchased.error.js'
@@ -22,7 +23,8 @@ export class UpdateShopperItemQuantityService {
   constructor(
     private getUserFound: GetUserFoundService,
     private getShopperListAccess: GetShopperListAccessService,
-    private shopperItemRepository: ShopperItemRepository
+    private shopperItemRepository: ShopperItemRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(
@@ -58,6 +60,13 @@ export class UpdateShopperItemQuantityService {
 
     if (data.quantity === 0) {
       await this.shopperItemRepository.delete(shopperItem.id)
+
+      this.eventPublisher.publish(`list:${shopperList.id}`, {
+        type: 'item-removed',
+        actorId: data.userId,
+        itemId: data.shopperItemId
+      })
+
       return { shopperItem }
     }
 
@@ -65,6 +74,12 @@ export class UpdateShopperItemQuantityService {
       shopperItem.quantity = data.quantity
 
       await this.shopperItemRepository.update(shopperItem)
+
+      this.eventPublisher.publish(`list:${shopperList.id}`, {
+        type: 'item-quantity-updated',
+        actorId: data.userId,
+        itemId: data.shopperItemId
+      })
     }
 
     return { shopperItem }

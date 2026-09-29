@@ -1,6 +1,8 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { InMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
@@ -21,6 +23,7 @@ let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
+let eventPublisher: EventPublisherDriver
 let sut: TogglePurchasedShopperItemService
 
 let user: User
@@ -38,10 +41,12 @@ describe('Toggle Purchased Shopper Item', () => {
       shopperListMemberRepository
     )
     shopperItemRepository = new InMemoryShopperItemRepository()
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new TogglePurchasedShopperItemService(
       getUserFound,
       getShopperListAccess,
-      shopperItemRepository
+      shopperItemRepository,
+      eventPublisher
     )
 
     vi.useFakeTimers()
@@ -75,6 +80,9 @@ describe('Toggle Purchased Shopper Item', () => {
   it('should be able to toggle purchased shopper item for purchased', async () => {
     vi.setSystemTime('2026-09-01T10:40:00Z')
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     const { shopperItem } = await sut.execute({
       userId: user.id,
       shopperListId: shopperList.id,
@@ -93,7 +101,16 @@ describe('Toggle Purchased Shopper Item', () => {
       purchasedBy: { name: user.name, username: user.username },
       purchasedAt: new Date('2026-09-01T10:40:00Z')
     })
-    expect(shopperItem).toEqual({ ...shopperItemUpdated, purchasedBy: expect.anything() })
+    expect(shopperItem).toEqual({
+      ...shopperItemUpdated,
+      purchasedBy: expect.anything()
+    })
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-purchased-toggled',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
   })
 
   it('should be able to toggle purchased shopper item for not purchased', async () => {
@@ -104,6 +121,9 @@ describe('Toggle Purchased Shopper Item', () => {
       purchasedById: user.id,
       purchasedAt: new Date()
     })
+
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
 
     const { shopperItem } = await sut.execute({
       userId: user.id,
@@ -123,6 +143,12 @@ describe('Toggle Purchased Shopper Item', () => {
       purchasedById: null,
       purchasedBy: null,
       purchasedAt: null
+    })
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-purchased-toggled',
+      actorId: user.id,
+      itemId: shopperItem.id
     })
   })
 
@@ -144,6 +170,9 @@ describe('Toggle Purchased Shopper Item', () => {
       acceptedAt: new Date()
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     const { shopperItem } = await sut.execute({
       userId: member.id,
       shopperListId: shopperList.id,
@@ -154,6 +183,12 @@ describe('Toggle Purchased Shopper Item', () => {
     expect(shopperItem.purchasedBy).toEqual({
       name: member.name,
       username: member.username
+    })
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-purchased-toggled',
+      actorId: member.id,
+      itemId: shopperItem.id
     })
   })
 
@@ -175,6 +210,9 @@ describe('Toggle Purchased Shopper Item', () => {
       acceptedAt: new Date()
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await sut.execute({
       userId: member.id,
       shopperListId: shopperList.id,
@@ -190,6 +228,12 @@ describe('Toggle Purchased Shopper Item', () => {
     expect(shopperItem.purchasedAt).toBeNull()
     expect(shopperItem.purchasedById).toBeNull()
     expect(shopperItem.purchasedBy).toBeNull()
+    expect(listener).toHaveBeenCalledTimes(2)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-purchased-toggled',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
   })
 
   it('should be able to save the new user who purchased when marking again after unmarking', async () => {
@@ -210,6 +254,9 @@ describe('Toggle Purchased Shopper Item', () => {
       acceptedAt: new Date()
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await sut.execute({
       userId: member.id,
       shopperListId: shopperList.id,
@@ -229,6 +276,12 @@ describe('Toggle Purchased Shopper Item', () => {
     })
 
     expect(shopperItem.purchasedById).toEqual(user.id)
+    expect(listener).toHaveBeenCalledTimes(3)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-purchased-toggled',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
   })
 
   it('should be able to toggle purchased shopper item if member with accepted invite', async () => {
@@ -249,6 +302,9 @@ describe('Toggle Purchased Shopper Item', () => {
       acceptedAt: new Date()
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     const { shopperItem } = await sut.execute({
       userId: member.id,
       shopperListId: shopperList.id,
@@ -256,6 +312,12 @@ describe('Toggle Purchased Shopper Item', () => {
     })
 
     expect(shopperItem.purchasedAt).toBeTruthy()
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-purchased-toggled',
+      actorId: member.id,
+      itemId: shopperItem.id
+    })
   })
 
   it('should not be able to toggle purchased shopper item if member with pending invite', async () => {
@@ -271,6 +333,9 @@ describe('Toggle Purchased Shopper Item', () => {
       memberId: member.id
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await expect(() =>
       sut.execute({
         userId: member.id,
@@ -278,6 +343,7 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperItemId: shopperItemCreated.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    expect(listener).toHaveBeenCalledTimes(0)
   })
 
   it('should not be able to toggle purchased shopper item if user not member', async () => {
@@ -288,6 +354,9 @@ describe('Toggle Purchased Shopper Item', () => {
       passwordHash: 'hasher-123456'
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await expect(() =>
       sut.execute({
         userId: userNotAccess.id,
@@ -295,6 +364,7 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperItemId: shopperItemCreated.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    expect(listener).toHaveBeenCalledTimes(0)
   })
 
   it('should not be able to toggle purchased shopper item quantity if shopper list already closed', async () => {
@@ -303,6 +373,9 @@ describe('Toggle Purchased Shopper Item', () => {
       closedAt: new Date()
     })
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await expect(() =>
       sut.execute({
         userId: user.id,
@@ -310,9 +383,13 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperItemId: shopperItemCreated.id
       })
     ).rejects.toBeInstanceOf(ShopperListClosedError)
+    expect(listener).toHaveBeenCalledTimes(0)
   })
 
   it('should not be able to toggle purchased shopper item if user not found', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await expect(() =>
       sut.execute({
         userId: 'user-not-found',
@@ -320,9 +397,13 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperItemId: shopperItemCreated.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    expect(listener).toHaveBeenCalledTimes(0)
   })
 
   it('should not be able to rchased shopper item if shopper list not found', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await expect(() =>
       sut.execute({
         userId: user.id,
@@ -330,9 +411,13 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperItemId: shopperItemCreated.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    expect(listener).toHaveBeenCalledTimes(0)
   })
 
   it('should not be able to rchased shopper item if shopper item not found', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     await expect(() =>
       sut.execute({
         userId: user.id,
@@ -340,5 +425,6 @@ describe('Toggle Purchased Shopper Item', () => {
         shopperItemId: 'shopper-item-not-found'
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+    expect(listener).toHaveBeenCalledTimes(0)
   })
 })

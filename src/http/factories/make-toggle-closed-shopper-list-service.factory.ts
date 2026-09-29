@@ -2,6 +2,7 @@ import { PrismaShopperListRepository } from '@/repositories/shopper-list-prisma.
 import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { ToggleClosedShopperListService } from '@/services/shopper/toggle-closed-shopper-list.service.js'
 import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
+import { makeEventPublisher } from './make-event-publisher.factory.js'
 
 export function makeToggleClosedShopperListService() {
   const userRepository = new PrismaUserRepository()
@@ -9,5 +10,9 @@ export function makeToggleClosedShopperListService() {
 
   const shopperListRepository = new PrismaShopperListRepository()
 
-  return new ToggleClosedShopperListService(getUserFound, shopperListRepository)
+  return new ToggleClosedShopperListService(
+    getUserFound,
+    shopperListRepository,
+    makeEventPublisher()
+  )
 }
