@@ -1,3 +1,4 @@
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { ForbbidenError } from '@/http/types/errors/forbbiden.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
@@ -14,7 +15,8 @@ export class RemoveShopperListMemberService {
   constructor(
     private getUserFound: GetUserFoundService,
     private getShopperListAccess: GetShopperListAccessService,
-    private shopperListMemberRepository: ShopperListMemberRepository
+    private shopperListMemberRepository: ShopperListMemberRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(data: RemoveShopperListMemberRequest): Promise<void> {
@@ -51,5 +53,11 @@ export class RemoveShopperListMemberService {
       shopperList.id,
       member.id
     )
+
+    this.eventPublisher.publish(`list:${shopperList.id}`, {
+      type: 'member-removed',
+      actorId: data.requesterId,
+      memberId: data.memberId
+    })
   }
 }

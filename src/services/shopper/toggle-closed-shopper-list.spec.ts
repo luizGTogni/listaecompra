@@ -1,5 +1,7 @@
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { InMemoryShopperListRepository } from '@/repositories/shopper-list-in-memory.repository.js'
 import { InMemoryShopperListMemberRepository } from '@/repositories/shopper-list-member-in-memory.repository.js'
@@ -14,6 +16,7 @@ let userRepository: UserRepository
 let getUserFound: GetUserFoundService
 let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
+let eventPublisher: EventPublisherDriver
 let sut: ToggleClosedShopperListService
 
 let user: User
@@ -25,9 +28,11 @@ describe('Toggle Closed Shopper List', () => {
     getUserFound = new GetUserFoundService(userRepository)
     shopperListRepository = new InMemoryShopperListRepository()
     shopperListMemberRepository = new InMemoryShopperListMemberRepository()
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new ToggleClosedShopperListService(
       getUserFound,
-      shopperListRepository
+      shopperListRepository,
+      eventPublisher
     )
 
     vi.useFakeTimers()
@@ -138,5 +143,35 @@ describe('Toggle Closed Shopper List', () => {
         shopperListId: shopperListCreated.id
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should publish list-closed-toggled event when toggle closed', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperListCreated.id}`, listener)
+
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperListCreated.id
+    })
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'list-closed-toggled',
+      actorId: user.id
+    })
+  })
+
+  it('should not publish event if shopper list not found', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperListCreated.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: 'shopper-list-not-found'
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+
+    expect(listener).not.toHaveBeenCalled()
   })
 })

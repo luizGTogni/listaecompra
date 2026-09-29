@@ -1,3 +1,4 @@
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListMemberRepository } from '@/repositories/shopper-list-member.repository.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
@@ -12,7 +13,8 @@ export class DeleteShopperListService {
   constructor(
     private getUserFound: GetUserFoundService,
     private shopperListRepository: ShopperListRepository,
-    private shopperListMemberRepository: ShopperListMemberRepository
+    private shopperListMemberRepository: ShopperListMemberRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(data: DeleteShopperListRequest): Promise<void> {
@@ -31,5 +33,10 @@ export class DeleteShopperListService {
     )
 
     await this.shopperListRepository.delete(data.shopperListId)
+
+    this.eventPublisher.publish(`list:${shopperList.id}`, {
+      type: 'list-deleted',
+      actorId: data.userId
+    })
   }
 }

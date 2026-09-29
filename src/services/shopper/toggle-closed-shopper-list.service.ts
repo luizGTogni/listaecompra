@@ -1,4 +1,5 @@
 import { ShopperList } from '@/domain/shopper-list.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListRepository } from '@/repositories/shopper-list.repository.js'
 import { GetUserFoundService } from '../users/get-user-found.service.js'
@@ -15,7 +16,8 @@ interface ToggleClosedShopperListResponse {
 export class ToggleClosedShopperListService {
   constructor(
     private getUserFound: GetUserFoundService,
-    private shopperListRepository: ShopperListRepository
+    private shopperListRepository: ShopperListRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(
@@ -34,6 +36,11 @@ export class ToggleClosedShopperListService {
     shopperList.closedAt = shopperList.closedAt ? null : new Date()
 
     await this.shopperListRepository.update(shopperList)
+
+    this.eventPublisher.publish(`list:${shopperList.id}`, {
+      type: 'list-closed-toggled',
+      actorId: data.userId
+    })
 
     return { shopperList }
   }
