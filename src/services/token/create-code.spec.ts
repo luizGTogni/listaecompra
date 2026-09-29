@@ -29,7 +29,6 @@ describe('Create Code Service', () => {
 
     const { code } = await sut.execute({
       userId: user.id,
-      expirationMinutes: 15,
       codeType: 'user_verification'
     })
 
@@ -54,13 +53,11 @@ describe('Create Code Service', () => {
 
     const response = await sut.execute({
       userId: user.id,
-      expirationMinutes: 15,
       codeType: 'user_verification'
     })
 
     const response2 = await sut.execute({
       userId: user.id,
-      expirationMinutes: 15,
       codeType: 'user_verification'
     })
 
@@ -70,4 +67,28 @@ describe('Create Code Service', () => {
     expect(code1?.isValid).toBeFalsy()
     expect(code2?.isValid).toBeTruthy()
   })
+
+  it.each([
+    { codeType: 'user_verification' as const, minutes: 15 },
+    { codeType: 'password_reset' as const, minutes: 30 }
+  ])(
+    'should expire a $codeType code in $minutes minutes',
+    async ({ codeType, minutes }) => {
+      const user = await userRepository.create({
+        name: 'John Doe',
+        username: 'johndoe',
+        email: 'johndoe@email.com',
+        passwordHash: 'hasher-41245'
+      })
+
+      const before = Date.now()
+      const { code } = await sut.execute({ userId: user.id, codeType })
+      const after = Date.now()
+
+      const expected = minutes * 60 * 1000
+
+      expect(code.expiredAt.getTime()).toBeGreaterThanOrEqual(before + expected)
+      expect(code.expiredAt.getTime()).toBeLessThanOrEqual(after + expected)
+    }
+  )
 })
