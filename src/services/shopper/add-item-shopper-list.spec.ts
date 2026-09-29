@@ -70,9 +70,6 @@ describe('Add Item Shopper List', () => {
       quantity: 2
     }
 
-    const listener = vi.fn()
-    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
-
     const { shopperItem } = await sut.execute({
       shopperListId: shopperList.id,
       userId: user.id,
@@ -87,16 +84,9 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
-      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
-    })
-    expect(listener).toHaveBeenCalledTimes(1)
-    expect(listener).toHaveBeenCalledWith({
-      type: 'item-added',
-      actorId: user.id,
-      itemId: shopperItem.id
     })
   })
 
@@ -121,7 +111,6 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
-      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -160,7 +149,6 @@ describe('Add Item Shopper List', () => {
       title: 'ItemTest',
       description: 'ItemDescriptionTest',
       quantity: 2,
-      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -307,41 +295,45 @@ describe('Add Item Shopper List', () => {
     ).rejects.toBeInstanceOf(InvalidItemQuantityError)
   })
 
-  it('should be able to add item with a unit and a fractional quantity', async () => {
+  it('should publish item-added event when the item is added', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     const { shopperItem } = await sut.execute({
       shopperListId: shopperList.id,
       userId: user.id,
-      title: 'Frango',
+      title: 'ItemTest',
       description: '',
-      quantity: 1.5,
-      unit: 'KG'
+      quantity: 2
     })
 
-    expect(shopperItem).toEqual(
-      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
-    )
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-added',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
   })
 
-  it.each([
-    { quantity: 2.5, unit: 'BOTTLE' as const },
-    { quantity: 0.5, unit: 'UNIT' as const },
-    { quantity: 1.2345, unit: 'KG' as const },
-    { quantity: 500, unit: 'BOTTLE' as const },
-    { quantity: 101, unit: 'KG' as const },
-    { quantity: 20001, unit: 'ML' as const }
-  ])(
-    'should not be able to add item with quantity $quantity in $unit',
-    async ({ quantity, unit }) => {
-      await expect(() =>
-        sut.execute({
-          shopperListId: shopperList.id,
-          userId: user.id,
-          title: 'ItemTest',
-          description: '',
-          quantity,
-          unit
-        })
-      ).rejects.toBeInstanceOf(InvalidItemQuantityError)
-    }
-  )
+  it('should not publish event if shopper list already closed', async () => {
+    await shopperListRepository.update({
+      ...shopperList,
+      closedAt: new Date()
+    })
+
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        title: 'ItemTest',
+        description: '',
+        quantity: 2
+      })
+    ).rejects.toBeInstanceOf(ShopperListClosedError)
+
+    expect(listener).not.toHaveBeenCalled()
+  })
 })

@@ -1,4 +1,3 @@
-import { isValidItemQuantity, ItemUnit } from '@/domain/item-unit.js'
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
@@ -14,7 +13,6 @@ interface AddItemShopperListRequest {
   title: string
   description: string
   quantity: number
-  unit?: ItemUnit
 }
 
 interface AddItemShopperListResponse {
@@ -53,9 +51,7 @@ export class AddItemShopperListService {
       throw new ResourceAlreadyExistsError()
     }
 
-    const unit = data.unit ?? 'UNIT'
-
-    if (!isValidItemQuantity(data.quantity, unit)) {
+    if (data.quantity <= 0) {
       throw new InvalidItemQuantityError()
     }
 
@@ -63,8 +59,7 @@ export class AddItemShopperListService {
       shopperListId: data.shopperListId,
       title: data.title,
       description: data.description,
-      quantity: data.quantity,
-      unit
+      quantity: data.quantity
     })
 
     this.eventPublisher.publish(`list:${shopperList.id}`, {

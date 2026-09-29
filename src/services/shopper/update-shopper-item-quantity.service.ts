@@ -1,4 +1,3 @@
-import { isValidItemQuantity, ItemUnit } from '@/domain/item-unit.js'
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
@@ -14,7 +13,6 @@ interface UpdateShopperItemQuantityRequest {
   shopperListId: string
   shopperItemId: string
   quantity: number
-  unit?: ItemUnit
 }
 
 interface UpdateShopperItemQuantityResponse {
@@ -72,15 +70,8 @@ export class UpdateShopperItemQuantityService {
       return { shopperItem }
     }
 
-    const unit = data.unit ?? shopperItem.unit
-
-    if (!isValidItemQuantity(data.quantity, unit)) {
-      throw new InvalidItemQuantityError()
-    }
-
-    if (data.quantity !== shopperItem.quantity || unit !== shopperItem.unit) {
+    if (data.quantity !== shopperItem.quantity) {
       shopperItem.quantity = data.quantity
-      shopperItem.unit = unit
 
       await this.shopperItemRepository.update(shopperItem)
 
