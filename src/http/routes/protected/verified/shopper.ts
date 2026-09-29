@@ -11,8 +11,9 @@ import { findAllShopperListController } from '@/http/controllers/shoppers/find-a
 import { findOneShopperItemController } from '@/http/controllers/shoppers/find-one-shopper-item.controller.js'
 import { findOneShopperListController } from '@/http/controllers/shoppers/find-one-shopper-list.controller.js'
 import { removeItemShopperListController } from '@/http/controllers/shoppers/remove-item-shopper-list.controller.js'
-import { toggleClosedShopperListController } from '@/http/controllers/shoppers/toggle-closed-shopper-list.controller.js'
 import { resetShareCodeController } from '@/http/controllers/shoppers/reset-share-code.controller.js'
+import { streamShopperListEventsController } from '@/http/controllers/shoppers/stream-shopper-list-events.controller.js'
+import { toggleClosedShopperListController } from '@/http/controllers/shoppers/toggle-closed-shopper-list.controller.js'
 import { togglePurchasedShopperItemController } from '@/http/controllers/shoppers/toggle-purchased-shopper-item.controller.js'
 import { updateShopperItemQuantityController } from '@/http/controllers/shoppers/update-shopper-item-quantity.controller.js'
 import { withAuth } from '@/http/schemas/auth/with-auth.schema.js'
@@ -71,6 +72,10 @@ import {
   resetShareCodeParamsSchema,
   resetShareCodeResponseSchema
 } from '@/http/schemas/shoppers/reset-share-code.schema.js'
+import {
+  streamShopperListEventsParamsSchema,
+  streamShopperListEventsResponseSchema
+} from '@/http/schemas/shoppers/stream-shopper-list-events.schema.js'
 import {
   toggleClosedShopperListParamsSchema,
   toggleClosedShopperListResponseSchema
@@ -162,8 +167,9 @@ export async function verifiedShopperRoutes(app: FastifyInstance) {
     {
       schema: withAuth({
         tags: ['Shopper'],
-        summary: 'Toggle purchased shopper item',
-        description: 'Toggle purchased in shopper item.',
+        summary: 'Update shopper item quantity',
+        description:
+          'Update the quantity (and optionally the unit) of a shopper item. Quantity 0 removes it.',
         params: updateShopperItemQuantityParamsSchema,
         body: updateShopperItemQuantityBodySchema,
         response: updateShopperItemQuantityResponseSchema
@@ -325,5 +331,19 @@ export async function verifiedShopperRoutes(app: FastifyInstance) {
       })
     },
     enterForShareCodeInviteController
+  )
+
+  app.get(
+    '/shoppers/:shopperListId/events',
+    {
+      schema: withAuth({
+        tags: ['Shopper', 'Events'],
+        summary: 'List events',
+        description: 'List all events.',
+        params: streamShopperListEventsParamsSchema,
+        response: streamShopperListEventsResponseSchema
+      })
+    },
+    streamShopperListEventsController
   )
 }
