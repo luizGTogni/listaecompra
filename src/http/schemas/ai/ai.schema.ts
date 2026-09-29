@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { itemUnitSchema } from '../shoppers/item-unit.schema.js'
 import { errorSchema } from '../errors/error.schema.js'
 import { zodErrorSchema } from '../errors/zod-error.schema.js'
 
@@ -26,7 +27,11 @@ export const chatShopperListAiResponseSchema = {
         title: z.string().optional(),
         description: z.string().optional(),
         addItems: z.array(
-          z.object({ title: z.string(), quantity: z.number() })
+          z.object({
+            title: z.string(),
+            quantity: z.number(),
+            unit: itemUnitSchema
+          })
         ),
         removeItems: z.array(z.object({ id: z.string(), title: z.string() }))
       })
@@ -49,7 +54,8 @@ export const applyShopperListAiProposalBodySchema = z.object({
     .array(
       z.object({
         title: z.string().trim().min(1).max(60),
-        quantity: z.coerce.number().int().min(1).max(999)
+        quantity: z.coerce.number().positive(),
+        unit: itemUnitSchema.default('UNIT')
       })
     )
     .max(40)

@@ -12,6 +12,7 @@ export class InMemoryShopperItemRepository implements ShopperItemRepository {
       title: data.title,
       description: data.description,
       quantity: data.quantity,
+      unit: data.unit ?? 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: new Date()

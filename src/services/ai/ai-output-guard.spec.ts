@@ -1,4 +1,12 @@
-import { guardItems, isValidItemTitle } from './ai-output-guard.js'
+import {
+  AI_ITEM_QUANTITY_MAX,
+  guardItems,
+  isExcessiveAiQuantity,
+  isValidItemTitle,
+  normalizeAiQuantity,
+  parseAiUnit
+} from './ai-output-guard.js'
+import { ITEM_QUANTITY_MAX, ITEM_UNITS } from '@/domain/item-unit.js'
 
 describe('AI output guard', () => {
   it.each(['Cenoura', 'Farinha de trigo', 'Leite (litro)', ' Ovos '])(
@@ -48,5 +56,45 @@ describe('AI output guard', () => {
 
   it('accepts an empty list', () => {
     expect(guardItems([])).toEqual([])
+  })
+})
+
+describe('AI unit and quantity', () => {
+  it.each([
+    ['bottle', 'BOTTLE'],
+    [' KG ', 'KG'],
+    ['barril', 'UNIT'],
+    [undefined, 'UNIT'],
+    [3, 'UNIT']
+  ])('reads the unit %j as %s', (unit, expected) => {
+    expect(parseAiUnit(unit)).toBe(expected)
+  })
+
+  it('rounds whole units and keeps 3 decimals in weight and volume', () => {
+    expect(normalizeAiQuantity(2.6, 'BOTTLE')).toBe(3)
+    expect(normalizeAiQuantity(0.4, 'UNIT')).toBe(1)
+    expect(normalizeAiQuantity(1.23456, 'KG')).toBe(1.235)
+    expect(normalizeAiQuantity(0.75, 'L')).toBe(0.75)
+    expect(normalizeAiQuantity(0.0001, 'L')).toBe(0.001)
+  })
+
+  it.each([0, -3, NaN, Infinity])('turns %s into 1', (quantity) => {
+    expect(normalizeAiQuantity(quantity, 'UNIT')).toBe(1)
+    expect(normalizeAiQuantity(quantity, 'KG')).toBe(1)
+  })
+
+  it('flags what is above the limit of the unit', () => {
+    expect(isExcessiveAiQuantity(60, 'BOTTLE')).toBe(false)
+    expect(isExcessiveAiQuantity(61, 'BOTTLE')).toBe(true)
+    expect(isExcessiveAiQuantity(500, 'BOTTLE')).toBe(true)
+    expect(isExcessiveAiQuantity(2, 'L')).toBe(false)
+  })
+
+  it('never allows the model more than a person is allowed', () => {
+    for (const unit of ITEM_UNITS) {
+      expect(AI_ITEM_QUANTITY_MAX[unit]).toBeLessThanOrEqual(
+        ITEM_QUANTITY_MAX[unit]
+      )
+    }
   })
 })

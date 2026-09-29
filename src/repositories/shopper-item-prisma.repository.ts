@@ -1,6 +1,7 @@
 import { prisma } from '@/config/prisma.js'
 import { ShopperItem, ShopperItemInput } from '@/domain/shopper-item.entity.js'
 import { isUuid } from '@/utils/is-uuid.js'
+import { withNumberQuantity } from './shopper-item-prisma.mapper.js'
 import { ShopperItemRepository } from './shopper-item.repository.js'
 
 export class PrismaShopperItemRepository implements ShopperItemRepository {
@@ -9,7 +10,7 @@ export class PrismaShopperItemRepository implements ShopperItemRepository {
       data
     })
 
-    return { ...shopperItem }
+    return withNumberQuantity(shopperItem)
   }
 
   async update(shopperItem: ShopperItem) {
@@ -18,7 +19,7 @@ export class PrismaShopperItemRepository implements ShopperItemRepository {
       data: shopperItem
     })
 
-    return { ...shopperItemUpdated }
+    return withNumberQuantity(shopperItemUpdated)
   }
 
   async delete(id: string) {
@@ -38,7 +39,7 @@ export class PrismaShopperItemRepository implements ShopperItemRepository {
       where: { id, shopperListId }
     })
 
-    return shopperItem ? { ...shopperItem } : null
+    return shopperItem ? withNumberQuantity(shopperItem) : null
   }
 
   async findByTitleAndShopperListId(title: string, shopperListId: string) {
@@ -46,14 +47,14 @@ export class PrismaShopperItemRepository implements ShopperItemRepository {
       where: { title, shopperListId }
     })
 
-    return shopperItem ? { ...shopperItem } : null
+    return shopperItem ? withNumberQuantity(shopperItem) : null
   }
 
   async findAllByShopperListId(shopperListId: string) {
-    const shopperItem = await prisma.shopperItem.findMany({
+    const shopperItems = await prisma.shopperItem.findMany({
       where: { shopperListId }
     })
 
-    return shopperItem
+    return shopperItems.map(withNumberQuantity)
   }
 }

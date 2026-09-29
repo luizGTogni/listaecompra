@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { itemUnitSchema } from './item-unit.schema.js'
 import { errorSchema } from '../errors/error.schema.js'
 import { zodErrorSchema } from '../errors/zod-error.schema.js'
 
@@ -10,11 +11,12 @@ export const addItemShopperListResponseSchema = {
       title: z.string(),
       description: z.string(),
       quantity: z.number(),
+      unit: itemUnitSchema,
       purchasedAt: z.date().nullable(),
       createdAt: z.date()
     })
   }),
-  400: zodErrorSchema,
+  400: z.union([zodErrorSchema, errorSchema]),
   404: errorSchema,
   409: errorSchema,
   500: errorSchema
@@ -27,5 +29,6 @@ export const addItemShopperListParamsSchema = z.object({
 export const addItemShopperListBodySchema = z.object({
   title: z.string(),
   description: z.string().default(''),
-  quantity: z.coerce.number().min(1).default(1)
+  quantity: z.coerce.number().positive().default(1),
+  unit: itemUnitSchema.default('UNIT')
 })

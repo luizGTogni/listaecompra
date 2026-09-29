@@ -58,6 +58,7 @@ describe('Add Item Shopper List Controller (e2e)', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      unit: 'UNIT',
       purchasedAt: null,
       createdAt: expect.any(String)
     })
@@ -247,5 +248,62 @@ describe('Add Item Shopper List Controller (e2e)', () => {
     expect(response.body).toEqual(
       expect.objectContaining({ name: 'UserNotVerified' })
     )
+  })
+
+  it('should be able to add item with a unit and a fractional quantity', async () => {
+    const { token } = await createAndAuthUser({ app })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: '' })
+
+    const response = await request(app.server)
+      .post(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/items/add`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Frango', quantity: 1.5, unit: 'KG' })
+
+    expect(response.statusCode).toEqual(201)
+    expect(response.body.shopperItem).toEqual(
+      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
+    )
+  })
+
+  it('should not be able to add item with a fractional quantity in a unit bought whole', async () => {
+    const { token } = await createAndAuthUser({ app })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: '' })
+
+    const response = await request(app.server)
+      .post(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/items/add`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Cachaça', quantity: 2.5, unit: 'BOTTLE' })
+
+    expect(response.statusCode).toEqual(400)
+  })
+
+  it('should not be able to add item with an unknown unit', async () => {
+    const { token } = await createAndAuthUser({ app })
+
+    const responseShopperList = await request(app.server)
+      .post(`${API_URL_V1_BASE}/shoppers`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'ShopperList', description: '' })
+
+    const response = await request(app.server)
+      .post(
+        `${API_URL_V1_BASE}/shoppers/${responseShopperList.body.shopperList.id}/items/add`
+      )
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Cachaça', quantity: 1, unit: 'BARRIL' })
+
+    expect(response.statusCode).toEqual(400)
   })
 })
