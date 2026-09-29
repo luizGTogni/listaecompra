@@ -11,7 +11,11 @@ import {
 // invisível ao TCP keep-alive (o keep-alive fica entre o socket e o
 // próximo salto de rede, o proxy nem participa dele). Por isso mandamos
 // um PING de verdade de tempos em tempos, sempre antes daquele timeout.
-const PING_INTERVAL_MS = 30_000
+//
+// Medido em produção: o proxy do Upstash estava derrubando a conexão a
+// cada ~25s, e um PING a cada 30s chegava um passo atrás. 15s dá folga
+// suficiente.
+const PING_INTERVAL_MS = 15_000
 
 export class RedisEventPublisherDriver implements EventPublisherDriver {
   private publisherClient = new Redis(env.REDIS_URL, { keepAlive: 10_000 })
