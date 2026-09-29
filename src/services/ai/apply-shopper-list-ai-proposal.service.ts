@@ -1,3 +1,4 @@
+import { isValidItemQuantity, ItemUnit } from '@/domain/item-unit.js'
 import { ForbbidenError } from '@/http/types/errors/forbbiden.error.js'
 import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
@@ -13,7 +14,7 @@ interface ApplyShopperListAiProposalRequest {
   shopperListId?: string
   title?: string
   description?: string
-  addItems: { title: string; quantity: number }[]
+  addItems: { title: string; quantity: number; unit?: ItemUnit }[]
   removeItemIds: string[]
 }
 
@@ -129,8 +130,14 @@ export class ApplyShopperListAiProposalService {
     for (const item of items) {
       const key = item.title.trim().toLowerCase()
 
+      const unit = item.unit ?? 'UNIT'
+
       // The client may have edited the proposal: check it again here.
-      if (!isValidItemTitle(item.title) || titles.has(key)) {
+      if (
+        !isValidItemTitle(item.title) ||
+        !isValidItemQuantity(item.quantity, unit) ||
+        titles.has(key)
+      ) {
         continue
       }
 
@@ -139,7 +146,8 @@ export class ApplyShopperListAiProposalService {
         shopperListId,
         title: item.title.trim(),
         description: '',
-        quantity: item.quantity
+        quantity: item.quantity,
+        unit
       })
       added += 1
     }

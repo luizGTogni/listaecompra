@@ -3,6 +3,9 @@ import { AiChatParams, AiDriver } from './ai.driver.js'
 // Used in tests: answers what `reply` is set to, and records the last call.
 export class MockAiDriver implements AiDriver {
   public lastCall: AiChatParams | null = null
+  public calls: AiChatParams[] = []
+  // Answers to give before falling back to `reply`, one per call.
+  public queue: string[] = []
 
   constructor(
     public reply = JSON.stringify({
@@ -19,7 +22,8 @@ export class MockAiDriver implements AiDriver {
 
   async chat(params: AiChatParams) {
     this.lastCall = params
+    this.calls.push(params)
 
-    return this.reply
+    return this.queue.shift() ?? this.reply
   }
 }
