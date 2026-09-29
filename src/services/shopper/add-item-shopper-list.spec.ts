@@ -84,6 +84,7 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -111,6 +112,7 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -149,6 +151,7 @@ describe('Add Item Shopper List', () => {
       title: 'ItemTest',
       description: 'ItemDescriptionTest',
       quantity: 2,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -335,5 +338,33 @@ describe('Add Item Shopper List', () => {
     ).rejects.toBeInstanceOf(ShopperListClosedError)
 
     expect(listener).not.toHaveBeenCalled()
+  })
+
+  it('should be able to add item in shopper list with a fractional unit', async () => {
+    const { shopperItem } = await sut.execute({
+      shopperListId: shopperList.id,
+      userId: user.id,
+      title: 'ItemTest',
+      description: '',
+      quantity: 1.5,
+      unit: 'KG'
+    })
+
+    expect(shopperItem).toEqual(
+      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
+    )
+  })
+
+  it('should not be able to use a fractional quantity in a unit that is bought whole', async () => {
+    await expect(() =>
+      sut.execute({
+        shopperListId: shopperList.id,
+        userId: user.id,
+        title: 'ItemTest',
+        description: '',
+        quantity: 1.5,
+        unit: 'UNIT'
+      })
+    ).rejects.toBeInstanceOf(InvalidItemQuantityError)
   })
 })

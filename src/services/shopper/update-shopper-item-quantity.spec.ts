@@ -372,4 +372,50 @@ describe('Toggle Purchased Shopper Item', () => {
 
     expect(listener).not.toHaveBeenCalled()
   })
+
+  it('should be able to change the unit along with the quantity', async () => {
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 1.5,
+      unit: 'KG'
+    })
+
+    expect(shopperItem).toEqual(
+      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
+    )
+  })
+
+  it('should keep the current unit when only the quantity changes', async () => {
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 2,
+      unit: 'L'
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 0.75
+    })
+
+    expect(shopperItem).toEqual(
+      expect.objectContaining({ quantity: 0.75, unit: 'L' })
+    )
+  })
+
+  it('should not be able to use a fractional quantity in a unit that is bought whole', async () => {
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id,
+        quantity: 1.5
+      })
+    ).rejects.toBeInstanceOf(InvalidItemQuantityError)
+  })
 })
