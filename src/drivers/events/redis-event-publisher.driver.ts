@@ -6,11 +6,14 @@ import {
   ShopperListEvent
 } from './event-publisher.driver.js'
 
+// Provedores como o Upstash colocam um proxy na frente do Redis, que
+// corta a conexão se não vir NENHUM comando por um tempo. Isso é
+// invisível ao TCP keep-alive (o keep-alive fica entre o socket e o
+// próximo salto de rede, o proxy nem participa dele). Por isso mandamos
+// um PING de verdade de tempos em tempos, sempre antes daquele timeout.
+const PING_INTERVAL_MS = 30_000
+
 export class RedisEventPublisherDriver implements EventPublisherDriver {
-  // keepAlive envia pacotes de TCP keep-alive, para o Upstash (e outros
-  // provedores) não derrubarem a conexão por ficar ociosa. ioredis já
-  // reconecta sozinho quando a conexão cai, mas sem um listener de
-  // 'error' ele registra "Unhandled error event" a cada queda.
   private publisherClient = new Redis(env.REDIS_URL, { keepAlive: 10_000 })
   private subscriberClient = new Redis(env.REDIS_URL, { keepAlive: 10_000 })
 
@@ -24,6 +27,17 @@ export class RedisEventPublisherDriver implements EventPublisherDriver {
     this.subscriberClient.on('error', (error) => {
       console.error('[RedisEventPublisherDriver] subscriber error', error)
     })
+
+    const pingInterval = setInterval(() => {
+      this.publisherClient.ping().catch(() => {})
+      // PING é um dos poucos comandos que o protocolo Redis permite numa
+      // conexão em modo subscriber, então isso não interfere nas
+      // assinaturas ativas.
+      this.subscriberClient.ping().catch(() => {})
+    }, PING_INTERVAL_MS)
+
+    // .unref() não impede o processo de encerrar por causa deste timer.
+    pingInterval.unref()
 
     this.subscriberClient.on('message', (channel, message) => {
       const listeners = this.listenersByChannel.get(channel)
