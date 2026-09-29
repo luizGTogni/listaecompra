@@ -1,4 +1,6 @@
+import { isValidItemQuantity, ItemUnit } from '@/domain/item-unit.js'
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
@@ -12,6 +14,7 @@ interface AddItemShopperListRequest {
   title: string
   description: string
   quantity: number
+  unit?: ItemUnit
 }
 
 interface AddItemShopperListResponse {
@@ -22,7 +25,8 @@ export class AddItemShopperListService {
   constructor(
     private getUserFound: GetUserFoundService,
     private getShopperListAccess: GetShopperListAccessService,
-    private shopperItemRepository: ShopperItemRepository
+    private shopperItemRepository: ShopperItemRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(
@@ -49,7 +53,9 @@ export class AddItemShopperListService {
       throw new ResourceAlreadyExistsError()
     }
 
-    if (data.quantity <= 0) {
+    const unit = data.unit ?? 'UNIT'
+
+    if (!isValidItemQuantity(data.quantity, unit)) {
       throw new InvalidItemQuantityError()
     }
 
@@ -57,7 +63,14 @@ export class AddItemShopperListService {
       shopperListId: data.shopperListId,
       title: data.title,
       description: data.description,
-      quantity: data.quantity
+      quantity: data.quantity,
+      unit
+    })
+
+    this.eventPublisher.publish(`list:${shopperList.id}`, {
+      type: 'item-added',
+      actorId: user.id,
+      itemId: shopperItem.id
     })
 
     return { shopperItem }

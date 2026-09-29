@@ -1,6 +1,8 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperItemAlreadyPurchasedError } from '@/http/types/errors/shopper-item-already-purchased.error.js'
@@ -23,6 +25,7 @@ let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
+let eventPublisher: EventPublisherDriver
 let sut: UpdateShopperItemQuantityService
 
 let user: User
@@ -40,10 +43,12 @@ describe('Toggle Purchased Shopper Item', () => {
       shopperListMemberRepository
     )
     shopperItemRepository = new InMemoryShopperItemRepository()
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new UpdateShopperItemQuantityService(
       getUserFound,
       getShopperListAccess,
-      shopperItemRepository
+      shopperItemRepository,
+      eventPublisher
     )
 
     user = await userRepository.create({
@@ -293,5 +298,147 @@ describe('Toggle Purchased Shopper Item', () => {
         quantity: -1
       })
     ).rejects.toBeInstanceOf(InvalidItemQuantityError)
+  })
+
+  it('should be able to change the unit along with the quantity', async () => {
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 1.5,
+      unit: 'KG'
+    })
+
+    const shopperItemUpdated =
+      await shopperItemRepository.findByIdAndShopperListId(
+        shopperItem.id,
+        shopperList.id
+      )
+
+    expect(shopperItem).toEqual(
+      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
+    )
+    expect(shopperItemUpdated).toEqual(shopperItem)
+  })
+
+  it('should keep the current unit when only the quantity changes', async () => {
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 2,
+      unit: 'L'
+    })
+
+    const { shopperItem } = await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 0.75
+    })
+
+    expect(shopperItem).toEqual(
+      expect.objectContaining({ quantity: 0.75, unit: 'L' })
+    )
+  })
+
+  it('should not be able to use a fractional quantity in a unit that is bought whole', async () => {
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id,
+        quantity: 1.5
+      })
+    ).rejects.toBeInstanceOf(InvalidItemQuantityError)
+  })
+
+  it('should publish item-quantity-updated event when quantity changes', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 3
+    })
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-quantity-updated',
+      actorId: user.id,
+      itemId: shopperItemCreated.id
+    })
+  })
+
+  it('should publish item-removed event when quantity equal 0', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 0
+    })
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-removed',
+      actorId: user.id,
+      itemId: shopperItemCreated.id
+    })
+  })
+
+  it('should not publish event if quantity and unit did not change', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItemCreated.id,
+      quantity: 2
+    })
+
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it('should not publish event if shopper item already purchased', async () => {
+    await shopperItemRepository.update({
+      ...shopperItemCreated,
+      purchasedAt: new Date()
+    })
+
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id,
+        quantity: 3
+      })
+    ).rejects.toBeInstanceOf(ShopperItemAlreadyPurchasedError)
+
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it('should not publish event if quantity is invalid', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItemCreated.id,
+        quantity: 1.5
+      })
+    ).rejects.toBeInstanceOf(InvalidItemQuantityError)
+
+    expect(listener).not.toHaveBeenCalled()
   })
 })

@@ -1,6 +1,8 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { InMemoryShopperItemRepository } from '@/repositories/shopper-item-in-memory.repository.js'
@@ -21,6 +23,7 @@ let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
+let eventPublisher: EventPublisherDriver
 let sut: RemoveItemShopperListService
 
 let user: User
@@ -38,10 +41,12 @@ describe('Remove Item Shopper List', () => {
       shopperListMemberRepository
     )
     shopperItemRepository = new InMemoryShopperItemRepository()
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new RemoveItemShopperListService(
       getUserFound,
       getShopperListAccess,
-      shopperItemRepository
+      shopperItemRepository,
+      eventPublisher
     )
 
     user = await userRepository.create({
@@ -198,5 +203,58 @@ describe('Remove Item Shopper List', () => {
         shopperItemId: 'shopper-item-not-found'
       })
     ).rejects.toBeInstanceOf(ResourceNotFoundError)
+  })
+
+  it('should publish item-removed event when the item is removed', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await sut.execute({
+      userId: user.id,
+      shopperListId: shopperList.id,
+      shopperItemId: shopperItem.id
+    })
+
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-removed',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
+  })
+
+  it('should not publish event if shopper list already closed', async () => {
+    await shopperListRepository.update({
+      ...shopperList,
+      closedAt: new Date()
+    })
+
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        shopperItemId: shopperItem.id
+      })
+    ).rejects.toBeInstanceOf(ShopperListClosedError)
+
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it('should not publish event if shopper item not found', async () => {
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
+    await expect(() =>
+      sut.execute({
+        userId: user.id,
+        shopperListId: shopperList.id,
+        shopperItemId: 'shopper-item-not-found'
+      })
+    ).rejects.toBeInstanceOf(ResourceNotFoundError)
+
+    expect(listener).not.toHaveBeenCalled()
   })
 })

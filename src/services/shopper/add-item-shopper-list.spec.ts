@@ -1,5 +1,7 @@
 import { ShopperList } from '@/domain/shopper-list.entity.js'
 import { User } from '@/domain/user.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
+import { InMemoryEventPublisherDriver } from '@/drivers/events/in-memory-event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceAlreadyExistsError } from '@/http/types/errors/resource-already-exists.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
@@ -22,6 +24,7 @@ let shopperListRepository: ShopperListRepository
 let shopperListMemberRepository: ShopperListMemberRepository
 let getShopperListAccess: GetShopperListAccessService
 let shopperItemRepository: ShopperItemRepository
+let eventPublisher: EventPublisherDriver
 let sut: AddItemShopperListService
 
 let user: User
@@ -38,10 +41,12 @@ describe('Add Item Shopper List', () => {
       shopperListMemberRepository
     )
     shopperItemRepository = new InMemoryShopperItemRepository()
+    eventPublisher = new InMemoryEventPublisherDriver()
     sut = new AddItemShopperListService(
       getUserFound,
       getShopperListAccess,
-      shopperItemRepository
+      shopperItemRepository,
+      eventPublisher
     )
 
     user = await userRepository.create({
@@ -65,6 +70,9 @@ describe('Add Item Shopper List', () => {
       quantity: 2
     }
 
+    const listener = vi.fn()
+    eventPublisher.subscribe(`list:${shopperList.id}`, listener)
+
     const { shopperItem } = await sut.execute({
       shopperListId: shopperList.id,
       userId: user.id,
@@ -79,9 +87,16 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
+    })
+    expect(listener).toHaveBeenCalledTimes(1)
+    expect(listener).toHaveBeenCalledWith({
+      type: 'item-added',
+      actorId: user.id,
+      itemId: shopperItem.id
     })
   })
 
@@ -106,6 +121,7 @@ describe('Add Item Shopper List', () => {
       title: dataShopperItem.title,
       description: dataShopperItem.description,
       quantity: dataShopperItem.quantity,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -144,6 +160,7 @@ describe('Add Item Shopper List', () => {
       title: 'ItemTest',
       description: 'ItemDescriptionTest',
       quantity: 2,
+      unit: 'UNIT',
       purchasedById: null,
       purchasedAt: null,
       createdAt: expect.any(Date)
@@ -289,4 +306,42 @@ describe('Add Item Shopper List', () => {
       })
     ).rejects.toBeInstanceOf(InvalidItemQuantityError)
   })
+
+  it('should be able to add item with a unit and a fractional quantity', async () => {
+    const { shopperItem } = await sut.execute({
+      shopperListId: shopperList.id,
+      userId: user.id,
+      title: 'Frango',
+      description: '',
+      quantity: 1.5,
+      unit: 'KG'
+    })
+
+    expect(shopperItem).toEqual(
+      expect.objectContaining({ quantity: 1.5, unit: 'KG' })
+    )
+  })
+
+  it.each([
+    { quantity: 2.5, unit: 'BOTTLE' as const },
+    { quantity: 0.5, unit: 'UNIT' as const },
+    { quantity: 1.2345, unit: 'KG' as const },
+    { quantity: 500, unit: 'BOTTLE' as const },
+    { quantity: 101, unit: 'KG' as const },
+    { quantity: 20001, unit: 'ML' as const }
+  ])(
+    'should not be able to add item with quantity $quantity in $unit',
+    async ({ quantity, unit }) => {
+      await expect(() =>
+        sut.execute({
+          shopperListId: shopperList.id,
+          userId: user.id,
+          title: 'ItemTest',
+          description: '',
+          quantity,
+          unit
+        })
+      ).rejects.toBeInstanceOf(InvalidItemQuantityError)
+    }
+  )
 })

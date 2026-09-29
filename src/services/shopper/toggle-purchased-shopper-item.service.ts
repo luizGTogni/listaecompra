@@ -1,4 +1,5 @@
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperListClosedError } from '@/http/types/errors/shopper-list-closed.error.js'
 import { ShopperItemRepository } from '@/repositories/shopper-item.repository.js'
@@ -21,7 +22,8 @@ export class TogglePurchasedShopperItemService {
   constructor(
     private getUserFound: GetUserFoundService,
     private getShopperListAccess: GetShopperListAccessService,
-    private shopperItemRepository: ShopperItemRepository
+    private shopperItemRepository: ShopperItemRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(
@@ -53,6 +55,12 @@ export class TogglePurchasedShopperItemService {
 
     const shopperItemUpdated =
       await this.shopperItemRepository.update(shopperItem)
+
+    this.eventPublisher.publish(`list:${shopperList.id}`, {
+      type: 'item-purchased-toggled',
+      actorId: user.id,
+      itemId: shopperItem.id
+    })
 
     return {
       shopperItem: {

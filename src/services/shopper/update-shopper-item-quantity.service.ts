@@ -1,4 +1,6 @@
+import { isValidItemQuantity, ItemUnit } from '@/domain/item-unit.js'
 import { ShopperItem } from '@/domain/shopper-item.entity.js'
+import { EventPublisherDriver } from '@/drivers/events/event-publisher.driver.js'
 import { InvalidItemQuantityError } from '@/http/types/errors/invalid-item-quantity.error.js'
 import { ResourceNotFoundError } from '@/http/types/errors/resource-not-found.error.js'
 import { ShopperItemAlreadyPurchasedError } from '@/http/types/errors/shopper-item-already-purchased.error.js'
@@ -12,6 +14,7 @@ interface UpdateShopperItemQuantityRequest {
   shopperListId: string
   shopperItemId: string
   quantity: number
+  unit?: ItemUnit
 }
 
 interface UpdateShopperItemQuantityResponse {
@@ -22,7 +25,8 @@ export class UpdateShopperItemQuantityService {
   constructor(
     private getUserFound: GetUserFoundService,
     private getShopperListAccess: GetShopperListAccessService,
-    private shopperItemRepository: ShopperItemRepository
+    private shopperItemRepository: ShopperItemRepository,
+    private eventPublisher: EventPublisherDriver
   ) {}
 
   async execute(
@@ -58,13 +62,33 @@ export class UpdateShopperItemQuantityService {
 
     if (data.quantity === 0) {
       await this.shopperItemRepository.delete(shopperItem.id)
+
+      this.eventPublisher.publish(`list:${shopperList.id}`, {
+        type: 'item-removed',
+        actorId: data.userId,
+        itemId: data.shopperItemId
+      })
+
       return { shopperItem }
     }
 
-    if (data.quantity !== shopperItem.quantity) {
+    const unit = data.unit ?? shopperItem.unit
+
+    if (!isValidItemQuantity(data.quantity, unit)) {
+      throw new InvalidItemQuantityError()
+    }
+
+    if (data.quantity !== shopperItem.quantity || unit !== shopperItem.unit) {
       shopperItem.quantity = data.quantity
+      shopperItem.unit = unit
 
       await this.shopperItemRepository.update(shopperItem)
+
+      this.eventPublisher.publish(`list:${shopperList.id}`, {
+        type: 'item-quantity-updated',
+        actorId: data.userId,
+        itemId: data.shopperItemId
+      })
     }
 
     return { shopperItem }

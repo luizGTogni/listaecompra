@@ -5,6 +5,7 @@ import { PrismaUserRepository } from '@/repositories/user-prisma.repository.js'
 import { GetShopperListAccessService } from '@/services/shopper/get-shopper-list-access.service.js'
 import { RemoveItemShopperListService } from '@/services/shopper/remove-item-shopper-list.service.js'
 import { GetUserFoundService } from '@/services/users/get-user-found.service.js'
+import { makeEventPublisher } from './make-event-publisher.factory.js'
 
 export function makeRemoveItemShopperListService() {
   const userRepository = new PrismaUserRepository()
@@ -20,6 +21,7 @@ export function makeRemoveItemShopperListService() {
   return new RemoveItemShopperListService(
     getUserFound,
     getShopperListAccess,
-    shopperItemRepository
+    shopperItemRepository,
+    makeEventPublisher()
   )
 }
